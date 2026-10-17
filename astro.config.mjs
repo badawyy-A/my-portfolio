@@ -5,6 +5,7 @@ import react from "@astrojs/react";
 export default defineConfig({
   site: "https://badawi.dev",
   devToolbar: { enabled: false },
+  build: { inlineStylesheets: "always" },
   integrations: [react()],
   // browser editing lives at Pages CMS (config in .pages.yml)
   redirects: { "/admin": "https://app.pagescms.org" },
