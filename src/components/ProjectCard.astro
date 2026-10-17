@@ -1,104 +1,188 @@
 ---
+// One project in the Work carousel: info and the project's own 3D scene, linking to its page.
 import type { CollectionEntry } from "astro:content";
 import SceneFrame from "./SceneFrame.astro";
+import Icon from "./Icon.astro";
 
 interface Props {
   project: CollectionEntry<"projects">;
+  index: number;
 }
 
-const { project } = Astro.props;
-const { title, summary, order, stack, scene } = project.data;
+const { project, index } = Astro.props;
+const { title, summary, category, stack, scene } = project.data;
+const href = `/work/${project.id}/`;
 ---
 
-<article class="card" data-reveal>
-  <SceneFrame scene={scene} />
-  <div class="body">
-    <p class="mono index">{String(order).padStart(2, "0")}</p>
-    <h3><a class="link" href={`/work/${project.id}/`}>{title}</a></h3>
+<article class="work-box">
+  <div class="work-info">
+    <div class="work-title">
+      <p class="num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</p>
+      <div>
+        <h3><a href={href}>{title}</a></h3>
+        <p class="category">{category}</p>
+      </div>
+    </div>
     <p class="summary">{summary}</p>
-    <p class="mono stack">{stack.join(" · ")}</p>
-    <p class="mono more" aria-hidden="true">View project <span class="arrow">→</span></p>
+    <p class="label">Stack</p>
+    <p class="stack">{stack.join(", ")}</p>
   </div>
+  <a class="work-image" href={href} tabindex="-1" aria-hidden="true">
+    <SceneFrame scene={scene} />
+    <span class="work-link"><Icon name="arrow" size={22} /></span>
+  </a>
 </article>
 
 <style>
-  .card {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    align-items: center;
-    gap: clamp(1.5rem, 1rem + 3vw, 4rem);
-    padding-block: var(--space-12);
-    border-top: 1px solid var(--line);
+  .work-box {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 30px 15px;
+    border-bottom: 1px solid var(--line);
   }
 
-  .index {
-    color: var(--accent);
+  .work-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  .work-title > div {
+    text-align: right;
+  }
+
+  .num {
+    margin: 0;
+    font-size: 50px;
+    font-weight: 600;
+    line-height: 1;
   }
 
   h3 {
-    margin-top: var(--space-3);
-    font-size: var(--text-2xl);
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
   }
 
-  .link {
+  h3 a {
     color: var(--fg);
     text-decoration: none;
-    transition: color var(--duration) var(--ease-out);
   }
 
-  /* the whole card is the link target */
-  .link::after {
-    content: "";
-    position: absolute;
-    inset: 0;
+  h3 a:hover {
+    color: var(--accent);
   }
 
-  .link:focus-visible {
-    outline: none;
-  }
-
-  .card:has(.link:focus-visible) {
-    outline: 2px solid var(--accent);
-    outline-offset: 4px;
+  .category {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13px;
   }
 
   .summary {
-    margin-top: var(--space-4);
-    max-width: 42ch;
+    max-width: 44ch;
     color: var(--muted);
+    font-size: 14px;
+  }
+
+  .label {
+    margin-top: 16px;
+    font-size: 18px;
+    font-weight: 600;
   }
 
   .stack {
-    margin-top: var(--space-6);
+    margin-top: 3px;
     color: var(--muted);
-    text-transform: none;
-    letter-spacing: 0;
+    font-size: 13px;
   }
 
-  .more {
-    margin-top: var(--space-6);
+  .work-image {
+    position: relative;
+    display: block;
+    width: 100%;
+  }
+
+  .work-image :global(.frame) {
+    width: 100%;
+  }
+
+  .work-link {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50px;
+    background-color: var(--bg);
     color: var(--fg);
+    box-shadow:
+      0 0 10px 0 rgb(237 230 227 / 0.4),
+      inset 0 0 10px 0 #3a2a2e;
+    opacity: 0;
+    transition: opacity 0.3s;
   }
 
-  .arrow {
-    display: inline-block;
-    color: var(--accent);
-    transition: translate var(--duration) var(--ease-out);
+  .work-box:hover .work-link {
+    opacity: 1;
   }
 
-  .card:hover .link {
-    color: var(--accent);
+  /* larger screens without the carousel (reduced motion): info and scene side by side */
+  @media (min-width: 769px) {
+    :global(html:not(.pin-work)) .work-box {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      gap: 48px;
+      padding-block: 48px;
+    }
   }
 
-  .card:hover .arrow {
-    translate: 4px 0;
+  /* the pinned horizontal carousel on larger screens */
+  :global(html.pin-work) .work-box {
+    flex-shrink: 0;
+    justify-content: flex-start;
+    width: 600px;
+    padding: 70px 80px;
+    gap: 40px;
+    border-right: 1px solid var(--line);
+    border-bottom: none;
   }
 
-  @media (max-width: 48rem) {
-    .card {
-      grid-template-columns: 1fr;
-      padding-block: var(--space-8);
+  :global(html.pin-work) .work-box:nth-child(even) {
+    flex-direction: column-reverse;
+  }
+
+  :global(html.pin-work) .work-image :global(.frame) {
+    max-height: 38vh;
+  }
+
+  @media (max-width: 1400px) {
+    :global(html.pin-work) .work-box {
+      width: 450px;
+      padding: 50px;
+    }
+
+    .num {
+      font-size: 38px;
+    }
+
+    h3 {
+      font-size: 22px;
+    }
+  }
+
+  @media (max-height: 900px) {
+    :global(html.pin-work) .work-box {
+      padding-block: 36px;
+      gap: 26px;
     }
   }
 </style>
