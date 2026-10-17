@@ -1,9 +1,9 @@
 ---
 title: MongoDB to PostgreSQL ETL pipeline
-summary: Move data from MongoDB into PostgreSQL through three layers, segment customers, and show it on a dashboard.
+summary: Move data from MongoDB into PostgreSQL through three layers, then segment customers on the clean data.
 order: 5
 scene: etl
-stack: [PySpark, Airflow, PostgreSQL, scikit-learn, FastAPI, React]
+stack: [PySpark, Airflow, MongoDB, PostgreSQL, scikit-learn, FastAPI]
 layers:
   - name: Model
     items: [scikit-learn K-Means]
@@ -13,15 +13,12 @@ layers:
     items: [FastAPI]
   - name: Database
     items: [MongoDB source, PostgreSQL warehouse]
-  - name: Frontend
-    items: [React, Recharts]
 flow:
   - MongoDB
   - L1 Raw
   - L2 Cleaned
   - L3 Business
   - Segmentation
-  - Dashboard
 ---
 
 ## Problem
@@ -52,8 +49,6 @@ Operational data in MongoDB is nested and inconsistent, which makes it hard to r
 
 **Orchestration.** One Airflow DAG runs L1, L2, L3 and segmentation in order, with retries, failure alerts, a run log and quality checks at each stage.
 
-**Dashboard.** KPIs and trends with filters, segment sizes and profiles, segment movement over time, and a pipeline health page.
-
 ## How it works
 
-Data moves from MongoDB through the three layers, each one stricter than the last. Segmentation reads the business layer and writes its results back, and the dashboard reads from PostgreSQL.
+Data moves from MongoDB through the three layers, each one stricter than the last. Segmentation reads the business layer and writes its results back to PostgreSQL, ready for reporting.
