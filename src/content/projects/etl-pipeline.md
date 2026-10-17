@@ -1,19 +1,34 @@
 ---
-title: MongoDB to PostgreSQL ETL pipeline
-summary: Move data from MongoDB into PostgreSQL through three layers, then segment customers on the clean data.
+title: ETL pipeline
+summary: Move data from MongoDB into PostgreSQL through three layers, then
+  segment customers on the clean data.
 category: Data engineering / ML
 order: 5
 scene: etl
-stack: [PySpark, Airflow, MongoDB, PostgreSQL, scikit-learn, FastAPI]
+stack:
+  - PySpark
+  - Airflow
+  - MongoDB
+  - PostgreSQL
+  - scikit-learn
+  - FastAPI
 layers:
   - name: Model
-    items: [scikit-learn K-Means]
+    items:
+      - scikit-learn K-Means
   - name: Pipeline
-    items: [Python, PySpark or pandas, SQLAlchemy, Airflow]
+    items:
+      - Python
+      - PySpark or pandas
+      - SQLAlchemy
+      - Airflow
   - name: Backend
-    items: [FastAPI]
+    items:
+      - FastAPI
   - name: Database
-    items: [MongoDB source, PostgreSQL warehouse]
+    items:
+      - MongoDB source
+      - PostgreSQL warehouse
 flow:
   - MongoDB
   - L1 Raw
@@ -21,7 +36,6 @@ flow:
   - L3 Business
   - Segmentation
 ---
-
 ## Problem
 
 Operational data in MongoDB is nested and inconsistent, which makes it hard to report on. It needs to become clean, structured data that is ready for analytics.
