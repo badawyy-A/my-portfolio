@@ -1,0 +1,33 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Page not found · Badawi">
+  <section class="container missing">
+    <p class="mono label">404</p>
+    <h1>This page doesn't exist.</h1>
+    <p><a href="/">Back to the home page</a></p>
+  </section>
+</Base>
+
+<style>
+  .missing {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-6);
+    min-height: 80svh;
+    padding-top: var(--header-height);
+  }
+
+  .label {
+    color: var(--accent);
+  }
+
+  h1 {
+    max-width: 14ch;
+    font-size: clamp(2.75rem, 1rem + 6vw, 6rem);
+    font-weight: 900;
+    line-height: 0.95;
+  }
+</style>
