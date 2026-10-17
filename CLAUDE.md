@@ -66,7 +66,7 @@ Accessibility: text contrast 4.5:1, visible focus states, real links/buttons, `p
 
 ## Home page, top to bottom
 
-0. Loading screen (full 3D sequence only): light screen, marquee "AI engineer / Full-stack engineer", dark pill counting to 100% while the avatar loads, then it expands into the page.
+0. Loading screen (full 3D sequence only): light screen, marquee "AI engineer / Full-stack engineer", dark pill counting to 100% while the avatar loads, then it expands into the page and the avatar rises up from below the frame into place.
 1. Header (fixed): `badawi.dev` wordmark left, email in the center, About, Experience, Work, Contact right (mono, uppercase, small, text rolls on hover). Fixed social column bottom-left (GitHub, LinkedIn, WhatsApp, email), "Move your mouse" caption bottom-right.
 2. Hero: avatar centered behind a split headline. Left: "Hello, I'm" (accent) + huge "BADAWI" + "AI & full-stack engineer" (mono). Right: "I build" + two stacked lines rolling through: AI products / full-stack apps / computer vision / LLM systems / data pipelines (first line accent and fading, second white). Short line: "Complete software, from the model to the interface to the deploy. Based in Cairo, building at Fixed Solutions." Burgundy rim glow behind the shoulders.
 3. About me: right half of the screen, words rise in. Text (written at Badawi's request): "I'm an AI and full-stack engineer based in Cairo. I joined Fixed Solutions as an intern in 2024 and now work there as an AI engineer, building computer vision, OCR and LLM features that have to work on real data. I build the whole path around a model: the backend and database, the interface people use, and the deploy that keeps it running."
