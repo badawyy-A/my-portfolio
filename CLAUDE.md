@@ -9,7 +9,7 @@ Positioning on every page: one engineer who can take a product from idea to runn
 - Nothing may look AI-generated. No emoji, no badge walls, no marketing tables, no gradient washes, no glowing template cards, no AI chat bot, no "passionate developer" copy. Plain, specific, human writing.
 - No status labels on projects ("in progress", "live", "building"). Every project card looks the same.
 - Project pages show the project only: problem, features, how it works, stack. No demo section, no results/metrics section, no team section.
-- Never use company code, data, or client names from Badawi's job. Projects are his own builds.
+- The projects come from Badawi's work and are under NDA: describe them in general terms only. No code links, no deployment details, never company code, data, or client names.
 - Ask Badawi before inventing any personal fact (dates, links, wording about himself). Use a clear `[TODO: ...]` placeholder until he answers.
 
 ## Git
@@ -77,13 +77,13 @@ Accessibility: text contrast 4.5:1, visible focus states, real links/buttons, `p
    Closing line under the four: "I can deliver the whole thing, or the part you need."
 5. How I deliver: a real four-step process, shown in order: Plan (scope, architecture, timeline) → Build (model, backend, frontend, in small working releases) → Ship (deploy, test with real users) → Support (fixes, monitoring, improvements). One short sentence per step.
 6. Work: the five projects, each with its own small 3D scene, title, one-liner, stack, link to its page.
-7. Experience: timeline. AI Engineer, Fixed Solutions ([TODO: start year] – now). Freelance full-stack and AI engineer ([TODO] – now): complete software for clients. B.Sc. Computer Science, Faculty of Computers and Information ([TODO: years]).
-8. Contact: big line "Have a product in mind? Let's build it." + email (shown as selectable text), WhatsApp, GitHub, LinkedIn. [TODO: all links]
+7. Experience: timeline at Fixed Solutions from August 2024: AI Engineer Intern (Aug 2024 – Sep 2024), Junior AI Engineer (Oct 2024 – Sep 2025), AI Engineer (Oct 2025 – now). B.Sc. Computer Science, Faculty of Computers and Information ([TODO: years]). No freelance entry.
+8. Contact: big line "Have a product in mind? Let's build it." + email hello@badawi.dev (shown as selectable text), WhatsApp +201007347507, GitHub github.com/badawyy-A, LinkedIn linkedin.com/in/abdulrhman-badawi-020b8128b.
 9. Footer: © year Badawi · Cairo, Egypt.
 
 ## Project page template
 
-Header line (stack), title, one-line summary, the project's 3D scene large, then sections: Problem · Features · How it works (with a simple diagram) · Stack · links to code. Nothing else. In "How it works" and "Stack", show the full stack of each project (model, backend, database, frontend, deployment) so every project reads as complete software, not only a model.
+Header line (stack), title, one-line summary, the project's 3D scene large, then sections: Problem · Features · How it works (with a simple diagram) · Stack. Nothing else (no code links, the projects are under NDA). In "How it works" and "Stack", show the stack of each project by layer (model, backend, database, frontend where it applies; no deployment) so every project reads as complete software, not only a model.
 
 ## Hero avatar
 
@@ -142,20 +142,19 @@ Ask questions about Egyptian law and get answers that cite the exact article.
 - Stack: llama-index, Hugging Face embeddings, FastAPI, React.
 
 ### 5. MongoDB to PostgreSQL ETL pipeline
-Move data from MongoDB into PostgreSQL through three layers, segment customers, and show it on a dashboard.
+Move data from MongoDB into PostgreSQL through three layers, then segment customers. No front-end on this project: never mention a dashboard, React or Recharts.
 - Problem: operational data in MongoDB is nested and inconsistent, hard to report on; it needs to become clean, structured, analytics-ready data.
 - L1 Raw: full load first, then incremental via timestamps or change streams; stored as JSONB with load metadata (batch ID, load time, source collection); untouched, so any layer can be rebuilt.
 - L2 Cleaned: nested documents flattened, arrays split into child tables; type casting, deduplication, null handling; validation rules with bad records sent to quarantine; standardization and schema drift handling; upserts so reruns are safe.
 - L3 Business: star schema (fact and dimension tables); SCD Type 2 history on dimensions; enrichment, derived columns, daily/weekly/monthly aggregates.
 - Segmentation (runs after L3): features from L3 (RFM, average order value, categories, activity trend); K-Means assigns each customer a segment; scheduled retraining with model versioning; segments, segment history and aggregates written back to PostgreSQL; alert if segment sizes shift suddenly.
 - Orchestration: one Airflow DAG (L1 → L2 → L3 → Segmentation) with retries, failure alerts, a run log, quality checks at each stage.
-- Dashboard: KPIs and trends, filters, segment sizes and profiles, segment movement, pipeline health page.
-- How it works: MongoDB → L1 → L2 → L3 → Segmentation → Dashboard.
-- Stack: Python, PySpark or pandas, MongoDB, PostgreSQL, Airflow, SQLAlchemy, scikit-learn, FastAPI, React, Recharts.
+- How it works: MongoDB → L1 → L2 → L3 → Segmentation.
+- Stack: Python, PySpark or pandas, MongoDB, PostgreSQL, Airflow, SQLAlchemy, scikit-learn, FastAPI.
 
 ## Pages CMS
 
-`.pages.yml` with two content types: `projects` (folder `src/content/projects`, fields: title, summary, order, stack list, repo url, body) and `site` (file `src/content/site.yaml`: name, intro, about, experience list, links). Badawi edits at app.pagescms.org with his GitHub login; saving commits to `main` and redeploys. Add `/admin` as a redirect to app.pagescms.org.
+`.pages.yml` with two content types: `projects` (folder `src/content/projects`, fields: title, summary, order, scene, stack list, layers, flow, body) and `site` (file `src/content/site.yaml`: name, intro, about, experience list, links). Badawi edits at app.pagescms.org with his GitHub login; saving commits to `main` and redeploys. Add `/admin` as a redirect to app.pagescms.org.
 
 ## Deploy
 
