@@ -1,71 +1,268 @@
 ---
-import SectionHead from "./SectionHead.astro";
 import Text from "./Text.astro";
+import Todo from "./Todo.astro";
+import { isTodo } from "../lib/content";
 
 interface Props {
   items: { role: string; org: string; start: string; end: string; text?: string }[];
 }
 const { items } = Astro.props;
+
+// the big number on each row: NOW for the current role, otherwise the start year
+const year = (item: Props["items"][number]) =>
+  item.end.toLowerCase() === "now" ? "NOW" : (item.start.match(/\d{4}/)?.[0] ?? item.start);
 ---
 
-<section id="experience" class="section container" aria-labelledby="experience-title">
-  <SectionHead id="experience" label="Experience" />
-  <ol class="timeline">
+<section class="career-section section-container" id="experience" aria-labelledby="experience-title">
+  <h2 id="experience-title">My career <span>&amp;</span><br /> experience</h2>
+  <div class="career-info">
+    <div class="career-timeline" aria-hidden="true"><span class="career-dot"></span></div>
+    <ol class="career-list">
     {items.map((item) => (
-      <li data-reveal>
-        <p class="mono years">
-          <Text value={item.start} /> – <Text value={item.end} />
-        </p>
-        <div>
-          <h3>{item.role}</h3>
-          <p class="org">{item.org}</p>
+      <li class="career-info-box">
+        <div class="career-info-in">
+          <div class="career-role">
+            <h3>{item.role}</h3>
+            <p class="org">{item.org}</p>
+          </div>
+          <p class="year">{isTodo(year(item)) ? <Todo text="[TODO]" /> : year(item)}</p>
         </div>
-        {item.text ? <p class="text">{item.text}</p> : <span />}
+        <div class="desc">
+          <p class="mono dates">
+            <Text value={item.start} /> – <Text value={item.end} />
+          </p>
+          {item.text && <p>{item.text}</p>}
+        </div>
       </li>
     ))}
-  </ol>
+    </ol>
+  </div>
 </section>
 
 <style>
-  .timeline {
+  .career-section {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 250px;
+    padding-block: 120px;
+  }
+
+  h2 {
+    margin: 50px 0 90px;
+    background: linear-gradient(0deg, #d9455f, #ede6e3);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-size: 70px;
+    font-weight: 500;
+    line-height: 70px;
+    text-align: center;
+  }
+
+  h2 > span {
+    font-weight: 300;
+  }
+
+  .career-info {
+    position: relative;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .career-list {
+    display: flex;
+    flex-direction: column;
     padding: 0;
     list-style: none;
   }
 
-  li {
-    display: grid;
-    grid-template-columns: minmax(10rem, 1fr) 2fr 2fr;
-    gap: var(--space-2) var(--space-8);
-    align-items: baseline;
-    padding-block: var(--space-8);
-    border-top: 1px solid var(--line);
+  .career-info-box {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 50px;
   }
 
-  li:last-child {
-    border-bottom: 1px solid var(--line);
-  }
-
-  .years {
-    color: var(--muted);
+  .career-info-in {
+    display: flex;
+    justify-content: space-between;
+    gap: 50px;
+    width: 40%;
   }
 
   h3 {
-    font-size: var(--text-xl);
+    margin: 0;
+    font-size: 33px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.01em;
   }
 
   .org {
-    margin-top: var(--space-1);
+    margin: 10px 0;
+    color: var(--accent);
+    font-size: 20px;
+  }
+
+  .year {
+    margin: 0;
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .desc {
+    width: 40%;
+  }
+
+  .desc p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .dates {
     color: var(--muted);
   }
 
-  .text {
-    color: var(--muted);
+  .desc .dates + p {
+    margin-top: 8px;
   }
 
-  @media (max-width: 48rem) {
-    li {
-      grid-template-columns: 1fr;
-      padding-block: var(--space-6);
+  .career-timeline {
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    width: 3px;
+    height: 100%;
+    background-image: linear-gradient(to top, #8f2a40 20%, var(--accent) 50%, transparent 95%);
+    translate: -50% 0;
+  }
+
+  .career-dot {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50px;
+    background-color: var(--accent);
+    box-shadow:
+      0 0 5px 2px #f08ea0,
+      0 0 15px 8px #e0607a,
+      0 0 110px 20px #ffb8c5;
+    translate: -50% 50%;
+    animation: timeline 0.8s linear infinite;
+  }
+
+  @keyframes timeline {
+    10%,
+    20%,
+    50%,
+    70%,
+    90% {
+      box-shadow: 0 0 5px 2px #f08ea0;
+    }
+    0%,
+    30%,
+    64%,
+    80%,
+    100% {
+      box-shadow:
+        0 0 5px 2px #f08ea0,
+        0 0 15px 5px #e0607a,
+        0 0 110px 20px #ffb8c5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .career-dot {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 1400px) {
+    h2 {
+      font-size: 50px;
+      line-height: 50px;
+    }
+
+    h3 {
+      width: 180px;
+      font-size: 22px;
+      line-height: 24px;
+    }
+
+    .org {
+      font-size: 17px;
+    }
+
+    .year {
+      font-size: 40px;
+    }
+
+    .career-info-in {
+      gap: 20px;
+      width: 45%;
+    }
+
+    .desc {
+      width: 45%;
+    }
+  }
+
+  @media (max-width: 1025px) {
+    .career-section {
+      margin-bottom: 0;
+      padding: 100px 0 70px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .career-info-box {
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 70px;
+    }
+
+    .career-info-in,
+    .desc {
+      width: 100%;
+      padding-left: 10%;
+    }
+
+    .career-timeline {
+      left: 0;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .career-section {
+      align-items: flex-start;
+      padding-top: 90px;
+    }
+
+    h2 {
+      width: 100%;
+      margin-top: 0;
+      font-size: 45px;
+      line-height: 45px;
+    }
+
+    .career-info-in {
+      gap: 0;
+    }
+
+    .year {
+      font-size: 33px;
+    }
+
+    .career-info-in,
+    .desc {
+      padding-left: 5%;
     }
   }
 </style>
