@@ -7,13 +7,16 @@ import Process from "../components/Process.astro";
 import Work from "../components/Work.astro";
 import Experience from "../components/Experience.astro";
 import Contact from "../components/Contact.astro";
+import HeroAvatar from "../components/three/HeroAvatar";
 import { getSite } from "../lib/content";
 
 const site = await getSite();
 ---
 
 <Base>
-  <Hero name={site.name} role={site.role} intro={site.intro} phrases={site.phrases} links={site.links} />
+  <Hero name={site.name} role={site.role} intro={site.intro} phrases={site.phrases} links={site.links}>
+    <HeroAvatar slot="avatar" client:idle />
+  </Hero>
   <About about={site.about} />
   <Services services={site.services} closing={site.servicesClosing} />
   <Process steps={site.process} />
