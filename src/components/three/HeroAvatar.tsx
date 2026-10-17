@@ -1,7 +1,8 @@
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { hasWebGL, prefersReducedMotion, useInView } from "./utils";
 
 const MODEL = "/models/avatar.glb";
@@ -72,7 +73,7 @@ function rig(scene: THREE.Object3D): Rig {
 }
 
 function Avatar({ reduce, onReady }: { reduce: boolean; onReady: () => void }) {
-  const { scene } = useGLTF(MODEL);
+  const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
   const avatar = useRef<Rig>(rig(scene));
