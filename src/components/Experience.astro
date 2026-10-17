@@ -1,0 +1,71 @@
+---
+import SectionHead from "./SectionHead.astro";
+import Text from "./Text.astro";
+
+interface Props {
+  items: { role: string; org: string; start: string; end: string; text?: string }[];
+}
+const { items } = Astro.props;
+---
+
+<section id="experience" class="section container" aria-labelledby="experience-title">
+  <SectionHead id="experience" label="Experience" />
+  <ol class="timeline">
+    {items.map((item) => (
+      <li data-reveal>
+        <p class="mono years">
+          <Text value={item.start} /> – <Text value={item.end} />
+        </p>
+        <div>
+          <h3>{item.role}</h3>
+          <p class="org">{item.org}</p>
+        </div>
+        {item.text ? <p class="text">{item.text}</p> : <span />}
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .timeline {
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1fr) 2fr 2fr;
+    gap: var(--space-2) var(--space-8);
+    align-items: baseline;
+    padding-block: var(--space-8);
+    border-top: 1px solid var(--line);
+  }
+
+  li:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .years {
+    color: var(--muted);
+  }
+
+  h3 {
+    font-size: var(--text-xl);
+  }
+
+  .org {
+    margin-top: var(--space-1);
+    color: var(--muted);
+  }
+
+  .text {
+    color: var(--muted);
+  }
+
+  @media (max-width: 48rem) {
+    li {
+      grid-template-columns: 1fr;
+      padding-block: var(--space-6);
+    }
+  }
+</style>

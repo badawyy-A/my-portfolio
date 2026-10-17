@@ -1,0 +1,52 @@
+---
+import SocialLinks from "./SocialLinks.astro";
+import Todo from "./Todo.astro";
+import { isTodo, type Links } from "../lib/content";
+
+interface Props {
+  line: string;
+  links: Links;
+}
+const { line, links } = Astro.props;
+---
+
+<section id="contact" class="section container contact" aria-labelledby="contact-title">
+  <p class="mono label" data-reveal>Contact</p>
+  <h2 id="contact-title" class="line" data-reveal>{line}</h2>
+  <p class="email" data-reveal>
+    {isTodo(links.email) ? <Todo text={links.email} /> : <a href={`mailto:${links.email}`}>{links.email}</a>}
+  </p>
+  <div data-reveal>
+    <SocialLinks links={links} only={["WhatsApp", "GitHub", "LinkedIn"]} />
+  </div>
+</section>
+
+<style>
+  .label {
+    color: var(--accent);
+  }
+
+  .line {
+    margin-top: var(--space-6);
+    max-width: 14ch;
+    font-size: clamp(2.75rem, 1rem + 6.5vw, 7.5rem);
+    font-weight: 900;
+    line-height: 0.92;
+  }
+
+  .email {
+    margin-block: var(--space-12) var(--space-8);
+    font-size: var(--text-xl);
+    font-weight: 500;
+    user-select: all;
+  }
+
+  .email a {
+    color: var(--fg);
+    text-decoration-color: var(--accent);
+  }
+
+  .email a:hover {
+    color: var(--accent);
+  }
+</style>
