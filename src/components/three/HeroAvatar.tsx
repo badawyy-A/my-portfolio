@@ -3,7 +3,11 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { hasWebGL, prefersReducedMotion, useInView } from "./utils";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const MODEL = "/models/avatar.glb";
 const X = new THREE.Vector3(1, 0, 0);
@@ -72,7 +76,45 @@ function rig(scene: THREE.Object3D): Rig {
   return result;
 }
 
-function Avatar({ reduce, onReady }: { reduce: boolean; onReady: () => void }) {
+/** Camera offsets the scroll sequence animates; applied on top of the base framing every frame. */
+type View = { dz: number; dy: number; dlook: number };
+
+/**
+ * The reference site's scroll sequence, for large screens: the avatar turns toward the About text and
+ * slides left, the camera pulls back for "What I build", then the whole stage lifts away.
+ */
+function scrollSequence(body: THREE.Object3D, view: View) {
+  const stage = document.querySelector<HTMLElement>(".stage");
+  if (!stage) return;
+  const scrub = { scrub: true, invalidateOnRefresh: true };
+
+  gsap
+    .timeline({ scrollTrigger: { trigger: ".landing", start: "top top", end: "bottom top", ...scrub } })
+    .fromTo(body.rotation, { y: 0 }, { y: 0.55, duration: 1 }, 0)
+    .fromTo(view, { dz: 0 }, { dz: -0.12, duration: 1 }, 0)
+    .fromTo(stage, { xPercent: 0 }, { xPercent: -25, duration: 1 }, 0)
+    .to(".landing-container", { opacity: 0, duration: 0.4 }, 0)
+    .to(".landing-container", { y: "40%", duration: 0.8 }, 0)
+    .fromTo(".about-me", { y: "-50%" }, { y: "0%" }, 0);
+
+  gsap
+    .timeline({ scrollTrigger: { trigger: ".about-section", start: "center 55%", end: "bottom top", ...scrub } })
+    .to(view, { dz: 1.5, dy: -0.26, dlook: -0.3, duration: 6, delay: 2, ease: "power3.inOut" }, 0)
+    .to(".about-section", { y: "30%", duration: 6 }, 0)
+    .to(".about-section", { opacity: 0, delay: 3, duration: 2 }, 0)
+    .to(stage, { xPercent: -12, delay: 2, duration: 5 }, 0)
+    .to(body.rotation, { y: 0.32, delay: 3, duration: 3 }, 0)
+    .fromTo(".rim-wrap", { opacity: 1, scale: 1 }, { opacity: 0, scale: 0, y: "-70%", duration: 5, delay: 2 }, 0.3);
+
+  gsap
+    .timeline({ scrollTrigger: { trigger: ".whatIDO", start: "top top", end: "bottom top", ...scrub } })
+    .fromTo(stage, { yPercent: 0 }, { yPercent: -100, duration: 4, ease: "none", delay: 1 }, 0)
+    .fromTo(".whatIDO", { y: 0 }, { y: "15%", duration: 2 }, 0);
+
+  ScrollTrigger.refresh();
+}
+
+function Avatar({ reduce, choreo, onReady }: { reduce: boolean; choreo: boolean; onReady: () => void }) {
   const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
@@ -81,13 +123,15 @@ function Avatar({ reduce, onReady }: { reduce: boolean; onReady: () => void }) {
   const look = useRef({ yaw: 0, pitch: 0 });
   const blink = useRef({ next: 2.5, start: -1 });
   const ready = useRef(false);
+  const body = useRef<THREE.Group>(null);
+  const view = useRef<View>({ dz: 0, dy: 0, dlook: 0 });
+  const frame = useRef({ z: 1.7, y: 1.5, look: 1.5 });
 
   useLayoutEffect(() => {
     const { focusY } = avatar.current;
     const narrow = size.width / size.height < 0.9;
-    camera.position.set(0, focusY - 0.02, narrow ? 1.9 : 1.7);
-    camera.lookAt(0, focusY - (narrow ? 0.08 : 0.06), 0);
-  }, [camera, size]);
+    frame.current = { z: narrow ? 1.9 : 1.7, y: focusY - 0.02, look: focusY - (narrow ? 0.08 : 0.06) };
+  }, [size]);
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
@@ -104,9 +148,20 @@ function Avatar({ reduce, onReady }: { reduce: boolean; onReady: () => void }) {
   useFrame((state, delta) => {
     const { head, neck, spine, base, blinkers } = avatar.current;
     const t = state.clock.elapsedTime;
+    const { z, y, look: lookAt } = frame.current;
+    const v = view.current;
+    camera.position.set(0, y + v.dy, z + v.dz);
+    camera.lookAt(0, lookAt + v.dlook, 0);
+
+    // past the hero the head stops following the mouse and looks toward the content on the right
+    const scrolled = choreo && window.scrollY > 200;
     const idle = performance.now() - pointer.current.last > 4000;
-    const gx = idle && !reduce ? Math.sin(t * 0.4) * 0.25 : pointer.current.x;
-    const gy = idle && !reduce ? Math.sin(t * 0.27) * 0.08 : pointer.current.y;
+    let gx = idle && !reduce ? Math.sin(t * 0.4) * 0.25 : pointer.current.x;
+    let gy = idle && !reduce ? Math.sin(t * 0.27) * 0.08 : pointer.current.y;
+    if (scrolled) {
+      gx = 0.55;
+      gy = 0.1;
+    }
 
     // 0.07 per frame at 60 fps, independent of the actual frame rate
     const k = 1 - Math.pow(1 - 0.07, Math.min(delta, 0.1) * 60);
@@ -146,10 +201,15 @@ function Avatar({ reduce, onReady }: { reduce: boolean; onReady: () => void }) {
     if (!ready.current) {
       ready.current = true;
       onReady();
+      if (choreo && body.current) scrollSequence(body.current, view.current);
     }
   });
 
-  return <primitive object={scene} />;
+  return (
+    <group ref={body}>
+      <primitive object={scene} />
+    </group>
+  );
 }
 
 function Lights() {
@@ -171,15 +231,18 @@ export default function HeroAvatar() {
   const [supported, setSupported] = useState(false);
   const [reduce, setReduce] = useState(false);
   const [ready, setReady] = useState(false);
+  const [choreo, setChoreo] = useState(false);
 
   useEffect(() => {
     setSupported(hasWebGL());
     setReduce(prefersReducedMotion());
+    setChoreo(document.documentElement.classList.contains("choreo"));
   }, []);
 
   const onReady = () => {
     setReady(true);
     box.current?.closest("[data-hero]")?.setAttribute("data-avatar", "ready");
+    window.dispatchEvent(new Event("avatar:ready"));
   };
 
   return (
@@ -198,7 +261,7 @@ export default function HeroAvatar() {
         >
           <Lights />
           <Suspense fallback={null}>
-            <Avatar reduce={reduce} onReady={onReady} />
+            <Avatar reduce={reduce} choreo={choreo} onReady={onReady} />
           </Suspense>
         </Canvas>
       )}
