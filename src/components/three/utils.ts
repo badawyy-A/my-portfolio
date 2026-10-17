@@ -4,14 +4,21 @@ import { useEffect, useState, type RefObject } from "react";
  * True only for hardware-accelerated WebGL. When the browser would fall back to software
  * rendering the 3D would stutter and block the page, so the static fallback is shown instead.
  */
+let webgl: boolean | undefined;
 export function hasWebGL() {
+  // tested once per page; the test context is released right away so it doesn't count against
+  // the browser's limit on live WebGL contexts
+  if (webgl !== undefined) return webgl;
   try {
     const canvas = document.createElement("canvas");
     const options = { failIfMajorPerformanceCaveat: true };
-    return Boolean(canvas.getContext("webgl2", options) ?? canvas.getContext("webgl", options));
+    const gl = (canvas.getContext("webgl2", options) ?? canvas.getContext("webgl", options)) as WebGLRenderingContext | null;
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    webgl = Boolean(gl);
   } catch {
-    return false;
+    webgl = false;
   }
+  return webgl;
 }
 
 export function prefersReducedMotion() {
