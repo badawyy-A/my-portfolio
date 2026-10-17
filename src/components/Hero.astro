@@ -267,14 +267,31 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
 
   /* phones and tablets: avatar on top, text below */
   @media (max-width: 1024px) {
+    /* the avatar area fades out at its bottom edge instead of ending on a hard line */
     .stage {
       bottom: auto;
       height: 62svh;
+      -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 97%);
+      mask-image: linear-gradient(to bottom, #000 60%, transparent 97%);
+    }
+
+    .fade {
+      display: none;
+    }
+
+    /* phones and tablets with the scroll sequence: the avatar stays at the top while the page moves */
+    :global(html.choreo-m) .stage {
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 0;
+      z-index: 1;
     }
 
     .rim {
-      top: 0;
-      transform: translate(-50%, 10%) scale(1.1);
+      top: 20%;
+      opacity: 0.7;
+      transform: translate(-50%, 30%) scale(0.95);
     }
 
     .landing-container {
