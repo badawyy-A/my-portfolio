@@ -16,8 +16,18 @@ export function rotateWorld(bone: THREE.Object3D, axis: THREE.Vector3, angle: nu
   bone.updateMatrixWorld(true);
 }
 
-/** An arm bone with its resting (arms down) and typing rotations, blended on scroll. */
-export type ArmBone = { bone: THREE.Object3D; rest: THREE.Quaternion; typing: THREE.Quaternion; side: number; kind: "arm" | "forearm" | "hand" };
+/** An arm bone with its three recorded rotations: resting at the side, arms crossed, on the keyboard. */
+export type ArmBone = {
+  bone: THREE.Object3D;
+  rest: THREE.Quaternion;
+  crossed: THREE.Quaternion;
+  typing: THREE.Quaternion;
+  side: number;
+  kind: "arm" | "forearm" | "hand" | "finger";
+};
+
+/** A leg bone standing and seated. */
+export type LegBone = { bone: THREE.Object3D; stand: THREE.Quaternion; seated: THREE.Quaternion };
 
 /** Where the chair, desk and laptop go, in the avatar's own space (floor at y = 0, facing +z). */
 export type Layout = { seatTop: number; deskTop: number; laptopZ: number; deskFront: number };
@@ -29,15 +39,20 @@ export type Rig = {
   base: Map<THREE.Object3D, THREE.Quaternion>;
   blinkers: THREE.Mesh[];
   arms: ArmBone[];
+  legs: LegBone[];
+  /** how far the body sinks when he sits down */
+  drop: number;
   layout: Layout;
+  /** head height standing, for the hero framing */
   focusY: number;
 };
 
 const worldPos = (obj: THREE.Object3D) => obj.getWorldPosition(new THREE.Vector3());
 
 /**
- * Pose the T-posed avatar once: seated, arms resting at the sides. Also records a typing pose for the
- * arms (blended in during "What I build") and measures where the furniture has to be.
+ * Pose the T-posed avatar once and record the poses the page blends between: arms resting, crossed
+ * (hero) or on the keyboard ("What I build"), legs standing or seated. Also measures where the
+ * furniture has to go. Leaves him standing with his arms at his sides.
  */
 export function rig(scene: THREE.Object3D): Rig {
   if (scene.userData.rig) return scene.userData.rig;
@@ -55,7 +70,7 @@ export function rig(scene: THREE.Object3D): Rig {
   });
   scene.updateMatrixWorld(true);
 
-  // arms down from the T-pose
+  // arms down from the T-pose: the resting pose
   for (const name of ["LeftArm", "RightArm"]) {
     const arm = bone(name);
     if (!arm) continue;
@@ -68,19 +83,59 @@ export function rig(scene: THREE.Object3D): Rig {
     if (forearm) rotateWorld(forearm, Y, side(forearm) * 0.12);
   }
 
-  // sit: thighs forward, shins back down, knees a little apart
+  // each arm chain: upper arm, forearm, hand, the finger joints (index to pinky, base to tip), then
+  // the two outer thumb joints
+  const fingers = (s: string) =>
+    [
+      ...["Index", "Middle", "Ring", "Pinky"].flatMap((f) => [1, 2, 3].map((n) => bone(`${s}Hand${f}${n}`))),
+      bone(`${s}HandThumb2`),
+      bone(`${s}HandThumb3`),
+    ].filter((b): b is THREE.Object3D => !!b);
+  const chains = ["Left", "Right"]
+    .map((s) => [bone(`${s}Arm`), bone(`${s}ForeArm`), bone(`${s}Hand`)])
+    .map((c, i) => (c.every(Boolean) ? [...(c as THREE.Object3D[]), ...fingers(i === 0 ? "Left" : "Right")] : null))
+    .filter((c): c is THREE.Object3D[] => c !== null);
+  const rest = chains.map((chain) => chain.map((b) => b.quaternion.clone()));
+  const restore = () => {
+    chains.forEach((chain, c) => chain.forEach((b, i) => b.quaternion.copy(rest[c][i])));
+    scene.updateMatrixWorld(true);
+  };
+
+  // arms crossed: elbows forward and a little out, forearms level and folded across the body
+  // (left over right), hands tucked against the opposite upper arm with the fingers curled
+  const crossed = chains.map((chain) => {
+    const [arm, forearm, hand] = chain;
+    const sd = side(arm);
+    rotateWorld(arm, X, sd > 0 ? -0.62 : -0.5);
+    rotateWorld(arm, Z, -sd * 0.04);
+    rotateWorld(forearm, X, sd > 0 ? -1.02 : -1.12);
+    rotateWorld(forearm, Y, -sd * 1.6);
+    rotateWorld(hand, Y, -sd * 0.15);
+    // curl the four fingers toward the palm
+    const joints = chain.slice(3);
+    if (joints.length === 14) {
+      const across = worldPos(joints[9]).sub(worldPos(joints[0])).normalize();
+      for (const joint of joints.slice(0, 12)) rotateWorld(joint, across, sd * 0.85);
+      // and fold the thumb in
+      for (const thumb of joints.slice(12)) rotateWorld(thumb, Z, sd * 0.6);
+    }
+    return chain.map((b) => b.quaternion.clone());
+  });
+  restore();
+
+  // sit: thighs forward, shins back down, knees a little apart, then sink until the feet are on the floor
+  const legBones = ["Left", "Right"].flatMap((s) => [bone(`${s}UpLeg`), bone(`${s}Leg`)]).filter((b): b is THREE.Object3D => !!b);
+  const stand = legBones.map((b) => b.quaternion.clone());
   for (const s of ["Left", "Right"]) {
     const thigh = bone(`${s}UpLeg`);
     const shin = bone(`${s}Leg`);
     if (!thigh || !shin) continue;
-    const sd = side(thigh);
     rotateWorld(thigh, X, -Math.PI / 2);
-    rotateWorld(thigh, Y, sd * 0.1);
+    rotateWorld(thigh, Y, side(thigh) * 0.1);
     rotateWorld(shin, X, Math.PI / 2);
   }
   scene.updateMatrixWorld(true);
-
-  // lower the whole avatar until the feet rest on the floor
+  const legs: LegBone[] = legBones.map((b, i) => ({ bone: b, stand: stand[i], seated: b.quaternion.clone() }));
   const ankle = bone("LeftFoot");
   const drop = ankle ? worldPos(ankle).y - 0.085 : 0.45;
   scene.position.y -= drop;
@@ -88,17 +143,11 @@ export function rig(scene: THREE.Object3D): Rig {
   const hip = bone("LeftUpLeg");
   const seatTop = hip ? worldPos(hip).y - 0.09 : 0.42;
 
-  // typing pose: upper arms forward, elbows bent, forearms angled in, palms turned down
-  const arms: ArmBone[] = [];
+  // typing, measured while seated: upper arms forward, elbows bent, forearms angled in, palms down
   const hands: THREE.Vector3[] = [];
-  for (const s of ["Left", "Right"]) {
-    const arm = bone(`${s}Arm`);
-    const forearm = bone(`${s}ForeArm`);
-    const hand = bone(`${s}Hand`);
-    if (!arm || !forearm || !hand) continue;
+  const typing = chains.map((chain) => {
+    const [arm, forearm, hand] = chain;
     const sd = side(arm);
-    const rest = [arm, forearm, hand].map((b) => b.quaternion.clone());
-
     rotateWorld(arm, X, -0.42);
     rotateWorld(arm, Z, -sd * 0.06);
     rotateWorld(forearm, X, -1.2);
@@ -107,33 +156,39 @@ export function rig(scene: THREE.Object3D): Rig {
     rotateWorld(forearm, along, sd * 0.9);
     rotateWorld(hand, along, sd * 0.5);
     rotateWorld(hand, X, 0.15);
-    scene.updateMatrixWorld(true);
     hands.push(worldPos(hand));
-
-    const typing = [arm, forearm, hand].map((b) => b.quaternion.clone());
-    (["arm", "forearm", "hand"] as const).forEach((kind, i) => {
-      const b = [arm, forearm, hand][i];
-      arms.push({ bone: b, rest: rest[i], typing: typing[i], side: sd, kind });
-      b.quaternion.copy(rest[i]);
-    });
-  }
-  scene.updateMatrixWorld(true);
+    return chain.map((b) => b.quaternion.clone());
+  });
+  restore();
 
   // the laptop sits under the typing hands
   const handY = hands.length ? hands.reduce((a, h) => a + h.y, 0) / hands.length : 0.68;
   const handZ = hands.length ? hands.reduce((a, h) => a + h.z, 0) / hands.length : 0.35;
-  const deskTop = handY - 0.06;
   const laptopZ = handZ + 0.1;
-  const layout: Layout = { seatTop, deskTop, laptopZ, deskFront: laptopZ - 0.2 };
+  const layout: Layout = { seatTop, deskTop: handY - 0.06, laptopZ, deskFront: laptopZ - 0.2 };
+
+  // back on his feet
+  legs.forEach((leg) => leg.bone.quaternion.copy(leg.stand));
+  scene.position.y += drop;
+  scene.updateMatrixWorld(true);
+
+  const arms: ArmBone[] = [];
+  chains.forEach((chain, c) => {
+    const sd = side(chain[0]);
+    chain.forEach((b, i) => {
+      const kind = i === 0 ? "arm" : i === 1 ? "forearm" : i === 2 ? "hand" : "finger";
+      arms.push({ bone: b, rest: rest[c][i], crossed: crossed[c][i], typing: typing[c][i], side: sd, kind });
+    });
+  });
 
   const head = bone("Head");
   const neck = bone("Neck");
   const spine = bone("Spine2") ?? bone("Spine1");
   const base = new Map<THREE.Object3D, THREE.Quaternion>();
   for (const b of [head, neck, spine]) if (b) base.set(b, b.quaternion.clone());
-  const focusY = head ? worldPos(head).y : 1.2;
+  const focusY = head ? worldPos(head).y : 1.6;
 
-  const result: Rig = { head, neck, spine, base, blinkers, arms, layout, focusY };
+  const result: Rig = { head, neck, spine, base, blinkers, arms, legs, drop, layout, focusY };
   scene.userData.rig = result;
   return result;
 }
