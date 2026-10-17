@@ -1,38 +1,23 @@
 ---
 import Base from "../layouts/Base.astro";
+import Hero from "../components/Hero.astro";
+import About from "../components/About.astro";
+import Services from "../components/Services.astro";
+import Process from "../components/Process.astro";
+import Work from "../components/Work.astro";
+import Experience from "../components/Experience.astro";
+import Contact from "../components/Contact.astro";
+import { getSite } from "../lib/content";
+
+const site = await getSite();
 ---
 
 <Base>
-  <section class="hero container">
-    <p class="mono hello">Hello, I'm</p>
-    <h1 class="name">BADAWI</h1>
-    <p class="role mono">AI &amp; full-stack engineer</p>
-  </section>
+  <Hero name={site.name} role={site.role} intro={site.intro} phrases={site.phrases} links={site.links} />
+  <About about={site.about} />
+  <Services services={site.services} closing={site.servicesClosing} />
+  <Process steps={site.process} />
+  <Work />
+  <Experience items={site.experience} />
+  <Contact line={site.contactLine} links={site.links} />
 </Base>
-
-<style>
-  .hero {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 100dvh;
-    padding-block: var(--header-height);
-  }
-
-  .hello {
-    color: var(--accent);
-    font-size: var(--text-sm);
-  }
-
-  .name {
-    font-size: var(--text-hero);
-    font-weight: 900;
-    line-height: 0.85;
-    letter-spacing: var(--tracking-tight);
-    margin-block: var(--space-2) var(--space-6);
-  }
-
-  .role {
-    color: var(--muted);
-  }
-</style>

@@ -95,6 +95,10 @@ a:hover {
   padding-inline: var(--gutter);
 }
 
+.section {
+  padding-block: clamp(4rem, 2.5rem + 4.5vw, 7.5rem);
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

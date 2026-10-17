@@ -1,9 +1,11 @@
 ---
+// on the home page the links stay in-page so smooth scrolling handles them
+const base = Astro.url.pathname === "/" ? "" : "/";
 const links = [
-  { href: "/#work", label: "Work" },
-  { href: "/#about", label: "About" },
-  { href: "/#experience", label: "Experience" },
-  { href: "/#contact", label: "Contact" },
+  { href: `${base}#work`, label: "Work" },
+  { href: `${base}#about`, label: "About" },
+  { href: `${base}#experience`, label: "Experience" },
+  { href: `${base}#contact`, label: "Contact" },
 ];
 ---
 
