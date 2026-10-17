@@ -1,5 +1,7 @@
 ---
 // Box that holds a project's 3D scene. Without WebGL it stays a quiet empty surface.
+import ProjectScene from "./three/ProjectScene";
+
 interface Props {
   scene: string;
   size?: "card" | "page";
@@ -8,7 +10,7 @@ const { scene, size = "card" } = Astro.props;
 ---
 
 <div class:list={["frame", size]} data-scene={scene} aria-hidden="true">
-  <slot />
+  <ProjectScene client:visible scene={scene} />
 </div>
 
 <style>
@@ -20,6 +22,17 @@ const { scene, size = "card" } = Astro.props;
       var(--surface);
     border: 1px solid var(--line);
     border-radius: 4px;
+  }
+
+  .frame :global(.scene-canvas) {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 700ms var(--ease-out);
+  }
+
+  .frame :global(.scene-canvas.is-ready) {
+    opacity: 1;
   }
 
   .card {
