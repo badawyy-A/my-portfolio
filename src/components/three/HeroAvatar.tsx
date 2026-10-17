@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { hasWebGL, prefersReducedMotion, useInView } from "./utils";
-import { X, Y, rig, rotateWorld } from "./avatar/rig";
+import { X, Y, Z, rig, rotateWorld } from "./avatar/rig";
 import { buildFurniture, type Furniture } from "./avatar/furniture";
 import { crouchIntro, scrollSequence, scrollSequenceMobile, type View } from "./avatar/sequence";
 import { brandShirt } from "./avatar/shirt";
@@ -15,6 +15,17 @@ type Mode = "desktop" | "mobile" | null;
 const bodyQuat = new THREE.Quaternion();
 const pitchAxis = new THREE.Vector3();
 const armQuat = new THREE.Quaternion();
+const toward = new THREE.Quaternion();
+const onward = new THREE.Quaternion();
+
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+const smooth = (x: number) => x * x * (3 - 2 * x);
+
+// how the arm fold is staggered: the under arm (right) starts first, and along each arm the upper arm
+// leads, the forearm follows, the hand and fingers arrive last
+const UNDER_ARM_LEAD = 0.12;
+const JOINT_LAG = { arm: 0, forearm: 0.08, hand: 0.17, finger: 0.24 } as const;
+const FOLD_SPAN = UNDER_ARM_LEAD + JOINT_LAG.finger;
 
 function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onReady: () => void }) {
   const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
@@ -31,7 +42,7 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
   const ready = useRef(false);
   const body = useRef<THREE.Group>(null);
   // hero pose: standing, arms crossed (the desktop intro starts from a crouch instead)
-  const view = useRef<View>({ dz: 0, dy: 0, dlook: 0, crouch: 0, nod: 0, cross: 1, sit: 0, typing: 0, screen: 0, scripted: 0 });
+  const view = useRef<View>({ dz: 0, dy: 0, dlook: 0, crouch: 0, nod: 0, shrug: 0, cross: 1, sit: 0, typing: 0, screen: 0, scripted: 0 });
   const frame = useRef({ z: 1.7, y: 1.2, look: 1.2 });
 
   useLayoutEffect(() => {
@@ -59,7 +70,7 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
   }, []);
 
   useFrame((state, delta) => {
-    const { head, neck, spine, base, blinkers, arms, legs, drop } = avatar.current;
+    const { head, neck, spine, lowerSpine, shoulders, base, blinkers, arms, legs, drop } = avatar.current;
     const t = state.clock.elapsedTime;
     const { z, y, look: lookAt } = frame.current;
     const v = view.current;
@@ -99,8 +110,15 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
       rotateWorld(bone, Y, yawAmount);
       rotateWorld(bone, pitchAxis, pitchAmount);
     };
+    // the crouch curls the whole spine, a third at each joint; a small negative crouch is the stretch
+    const bend = v.crouch * 0.34;
+    for (const joint of lowerSpine) {
+      joint.bone.quaternion.copy(joint.base);
+      joint.bone.updateMatrixWorld(true);
+      rotateWorld(joint.bone, pitchAxis, bend);
+    }
     const breath = reduce ? 0 : Math.sin(t * 1.4) * 0.012;
-    aim(spine, yaw * 0.15, breath + v.typing * 0.12 + v.crouch * 0.45);
+    aim(spine, yaw * 0.15, breath + v.typing * 0.12 + bend);
     aim(neck, yaw * 0.35, pitch * 0.35);
     aim(head, yaw * 0.55, pitch * 0.6 + v.nod);
 
@@ -108,10 +126,29 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
     for (const leg of legs) leg.bone.quaternion.slerpQuaternions(leg.stand, leg.seated, v.sit);
     scene.position.y = -drop * v.sit;
 
-    // arms: resting, crossed, or on the keyboard
+    // collarbones: lift in the stretch, roll slightly forward as the arms fold
+    const folded = smooth(clamp01(v.cross));
+    for (const shoulder of shoulders) {
+      shoulder.bone.quaternion.copy(shoulder.base);
+      shoulder.bone.updateMatrixWorld(true);
+      rotateWorld(shoulder.bone, Z, shoulder.side * 0.1 * v.shrug);
+      rotateWorld(shoulder.bone, Y, -shoulder.side * 0.1 * folded);
+    }
+
+    // arms: resting -> crossed along a curve through the halfway pose (elbows bend and bring the
+    // forearms up before they swing across), each joint on its own delay; then on to the keyboard
     for (const arm of arms) {
-      armQuat.slerpQuaternions(arm.rest, arm.crossed, v.cross);
+      const delay = (arm.side < 0 ? 0 : UNDER_ARM_LEAD) + JOINT_LAG[arm.kind];
+      const p = smooth(clamp01(v.cross * (1 + FOLD_SPAN) - delay));
+      toward.slerpQuaternions(arm.rest, arm.halfway, p);
+      onward.slerpQuaternions(arm.halfway, arm.crossed, p);
+      armQuat.slerpQuaternions(toward, onward, p);
       arm.bone.quaternion.slerpQuaternions(armQuat, arm.typing, v.typing);
+      // while he is bent over, the arms hang down from the shoulders instead of following the torso
+      if (arm.kind === "arm" && v.crouch > 0) {
+        arm.bone.updateMatrixWorld(true);
+        rotateWorld(arm.bone, pitchAxis, -v.crouch * 1.0 * (1 - p));
+      }
     }
     if (v.typing > 0.85 && !reduce) {
       for (const arm of arms) {
