@@ -1,0 +1,104 @@
+---
+import type { CollectionEntry } from "astro:content";
+import SceneFrame from "./SceneFrame.astro";
+
+interface Props {
+  project: CollectionEntry<"projects">;
+}
+
+const { project } = Astro.props;
+const { title, summary, order, stack, scene } = project.data;
+---
+
+<article class="card" data-reveal>
+  <SceneFrame scene={scene}><slot /></SceneFrame>
+  <div class="body">
+    <p class="mono index">{String(order).padStart(2, "0")}</p>
+    <h3><a class="link" href={`/work/${project.id}/`}>{title}</a></h3>
+    <p class="summary">{summary}</p>
+    <p class="mono stack">{stack.join(" · ")}</p>
+    <p class="mono more" aria-hidden="true">View project <span class="arrow">→</span></p>
+  </div>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    align-items: center;
+    gap: clamp(1.5rem, 1rem + 3vw, 4rem);
+    padding-block: var(--space-12);
+    border-top: 1px solid var(--line);
+  }
+
+  .index {
+    color: var(--accent);
+  }
+
+  h3 {
+    margin-top: var(--space-3);
+    font-size: var(--text-2xl);
+  }
+
+  .link {
+    color: var(--fg);
+    text-decoration: none;
+    transition: color var(--duration) var(--ease-out);
+  }
+
+  /* the whole card is the link target */
+  .link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .link:focus-visible {
+    outline: none;
+  }
+
+  .card:has(.link:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+  }
+
+  .summary {
+    margin-top: var(--space-4);
+    max-width: 42ch;
+    color: var(--muted);
+  }
+
+  .stack {
+    margin-top: var(--space-6);
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .more {
+    margin-top: var(--space-6);
+    color: var(--fg);
+  }
+
+  .arrow {
+    display: inline-block;
+    color: var(--accent);
+    transition: translate var(--duration) var(--ease-out);
+  }
+
+  .card:hover .link {
+    color: var(--accent);
+  }
+
+  .card:hover .arrow {
+    translate: 4px 0;
+  }
+
+  @media (max-width: 48rem) {
+    .card {
+      grid-template-columns: 1fr;
+      padding-block: var(--space-8);
+    }
+  }
+</style>

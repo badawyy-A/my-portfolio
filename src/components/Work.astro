@@ -1,0 +1,20 @@
+---
+import SectionHead from "./SectionHead.astro";
+import ProjectCard from "./ProjectCard.astro";
+import { getProjects } from "../lib/content";
+
+const projects = await getProjects();
+---
+
+<section id="work" class="section container" aria-labelledby="work-title">
+  <SectionHead id="work" label="Work" title="Things I built, end to end." />
+  <div class="list">
+    {projects.map((project) => <ProjectCard project={project} />)}
+  </div>
+</section>
+
+<style>
+  .list {
+    border-bottom: 1px solid var(--line);
+  }
+</style>
