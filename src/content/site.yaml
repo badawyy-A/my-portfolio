@@ -1,0 +1,55 @@
+name: Badawi
+role: AI & full-stack engineer
+intro: Complete software, from the model to the interface to the deploy. Based in Cairo, building at Fixed Solutions.
+phrases:
+  - AI products
+  - full-stack apps
+  - computer vision
+  - LLM systems
+  - data pipelines
+
+about: "[TODO: Badawi's own 2–3 sentences about himself]"
+
+services:
+  - title: AI features
+    text: Vision, OCR, LLM and RAG features that work on real data.
+  - title: Full-stack apps
+    text: FastAPI and PostgreSQL backends, React frontends, admin dashboards, auth and APIs.
+  - title: Data pipelines
+    text: Moving, cleaning and modeling data, from messy sources to tables you can trust.
+  - title: Deployment
+    text: Docker, CI/CD with GitHub Actions, and running and monitoring in production.
+servicesClosing: I can deliver the whole thing, or the part you need.
+
+process:
+  - title: Plan
+    text: We agree on scope, architecture and a timeline before any code is written.
+  - title: Build
+    text: Model, backend and frontend, shipped in small releases that already work.
+  - title: Ship
+    text: Deployed to production and tested with real users.
+  - title: Support
+    text: Fixes, monitoring and improvements after launch.
+
+experience:
+  - role: AI Engineer
+    org: Fixed Solutions
+    start: "[TODO: start year]"
+    end: now
+  - role: Freelance full-stack and AI engineer
+    org: Independent
+    start: "[TODO: start year]"
+    end: now
+    text: Complete software for clients.
+  - role: B.Sc. Computer Science
+    org: Faculty of Computers and Information
+    start: "[TODO: start year]"
+    end: "[TODO: end year]"
+
+contactLine: Have a product in mind? Let's build it.
+
+links:
+  email: "[TODO: email address]"
+  whatsapp: "[TODO: WhatsApp link, e.g. https://wa.me/20...]"
+  github: "[TODO: GitHub profile URL]"
+  linkedin: "[TODO: LinkedIn profile URL]"
