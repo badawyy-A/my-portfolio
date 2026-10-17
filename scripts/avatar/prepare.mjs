@@ -1,7 +1,11 @@
-// Avatar pipeline, run once when model.fbx changes. model.fbx itself is not committed.
+// Avatar pipeline, run once when the avatar changes. The FBX source is not committed.
+// Current avatar: final.fbx (MetaPerson), wearing the plain T-shirt of the earlier model.fbx.
 //
-// 1. FBX -> GLB with FBX2glTF (https://github.com/godotengine/FBX2glTF/releases):
-//      FBX2glTF -i model.fbx -o raw --binary --skinning-weights 4
+// 1. FBX -> GLB with FBX2glTF (https://github.com/godotengine/FBX2glTF/releases), for both files:
+//      FBX2glTF -i final.fbx -o final-raw --binary --skinning-weights 4
+//      FBX2glTF -i model.fbx -o model-raw --binary --skinning-weights 4
+//    then swap in the old T-shirt:
+//      node scripts/avatar/swap-part.mjs final-raw.glb model-raw.glb outfit_top raw.glb
 // 2. Clean it (this script): drop the teeth (mouth stays closed), keep only the blink
 //    blend shapes, make materials non-metallic so skin is not shiny:
 //      node scripts/avatar/prepare.mjs raw.glb clean.glb
