@@ -16,6 +16,7 @@ export type View = {
   dlook: number;
   crouch: number;
   nod: number;
+  shrug: number;
   cross: number;
   sit: number;
   typing: number;
@@ -88,22 +89,26 @@ export function scrollSequenceMobile(body: THREE.Object3D, view: View) {
 }
 
 /**
- * Entrance once the loading screen opens: he starts crouched out of sight, the top of his head slowly
- * comes up from the bottom edge, he lifts his head to look at you, stands up, then crosses his arms.
+ * Entrance once the loading screen opens, as one continuous movement: he starts curled down below the
+ * frame and unrolls upward like someone stretching awake. The hips lift the whole way while the spine
+ * straightens from the bottom up and the head comes up last, crown first; at the top he stretches a
+ * little (chest open, shoulders up), then settles while his arms fold.
  */
 export function crouchIntro(body: THREE.Object3D, view: View) {
   body.position.y = -0.95;
-  Object.assign(view, { crouch: 1, nod: 0.45, cross: 0, scripted: 1 });
+  Object.assign(view, { crouch: 1, nod: 0.55, shrug: 0, cross: 0, scripted: 1 });
+  const ease = "sine.inOut";
   const play = () =>
     gsap
-      .timeline({ delay: 0.25 })
-      .to(body.position, { y: -0.42, duration: 2, ease: "power2.out" }, 0)
-      .to(view, { nod: -0.18, duration: 1, ease: "power2.inOut" }, 1.3)
-      .to(view, { crouch: 0, duration: 1.1, ease: "power2.inOut" }, 2.4)
-      .to(body.position, { y: 0, duration: 1.1, ease: "power2.inOut" }, 2.4)
-      .to(view, { nod: 0, duration: 0.7, ease: "power1.inOut" }, 3.1)
-      .to(view, { cross: 1, duration: 0.9, ease: "power2.inOut" }, 3.4)
-      .set(view, { scripted: 0 }, 4.3);
+      .timeline({ delay: 0.2 })
+      .to(body.position, { y: 0, duration: 2.8, ease }, 0)
+      .to(view, { crouch: -0.12, duration: 2.6, ease }, 0.25)
+      .to(view, { nod: -0.1, duration: 2.4, ease }, 0.6)
+      .to(view, { shrug: 1, duration: 0.7, ease }, 2.1)
+      .to(view, { crouch: 0, nod: 0, shrug: 0, duration: 0.9, ease }, 2.85)
+      // the arm fold is timed per joint in the frame loop; this is just its overall progress
+      .to(view, { cross: 1, duration: 1.7, ease: "none" }, 2.7)
+      .set(view, { scripted: 0 }, 4.5);
   if (document.documentElement.classList.contains("loading")) window.addEventListener("site:ready", play, { once: true });
   else play();
 }
