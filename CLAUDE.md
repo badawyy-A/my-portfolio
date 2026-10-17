@@ -60,26 +60,27 @@ Theme: black and burgundy, one committed dark look (no light mode).
 
 Type: Schibsted Grotesk (display 800–900, tight negative tracking; body 400–500) + JetBrains Mono (small labels, stack lists, captions). Google Fonts.
 
-Feel: cinematic and confident like moncy.dev (big type, one strong 3D moment, smooth scroll), but it must not look like a moncy clone: no lavender, no Geist, no 3D tech-stack balls, no character typing at a laptop.
+Feel: layout and interactions follow the reference template github.com/red1-for-hek/portfolio-website (MIT, credited in THIRD_PARTY_NOTICES.md): loading screen, fixed avatar with a scroll sequence (turns and slides left for About, camera pulls back for What I build, lifts away before Experience), framed What I build cards, career timeline with a glowing dot, pinned horizontal Work carousel, custom cursor, edge glows, fixed social column. Everything in our theme and content. Still never: lavender, Geist, 3D tech-stack balls, a character typing at a laptop, an AI chat bot, games. The full 3D sequence and loader only run on screens wider than 1024 px with motion allowed and hardware WebGL; everything else gets a static, complete page.
 
 Accessibility: text contrast 4.5:1, visible focus states, real links/buttons, `prefers-reduced-motion` turns off idle animation and scroll effects, site works and reads fully with WebGL off.
 
 ## Home page, top to bottom
 
-1. Header: `badawi.dev` wordmark left; Work, About, Experience, Contact right (mono, uppercase, small).
-2. Hero: avatar 3D scene centered behind a split headline. Left: "Hello, I'm" (mono, accent) + huge "BADAWI". Right: "AI & full-stack engineer" label, "I build" + a phrase that cycles: AI products / full-stack apps / computer vision / LLM systems / data pipelines. Short line: "Complete software, from the model to the interface to the deploy. Based in Cairo, building at Fixed Solutions." Bottom: caption "Move your mouse." + social links. Soft deep-burgundy radial glow behind the avatar, fade to background at the bottom.
-3. About: [TODO: Badawi's own 2–3 sentences].
-4. What I build (short paragraph each):
+0. Loading screen (full 3D sequence only): light screen, marquee "AI engineer / Full-stack engineer", dark pill counting to 100% while the avatar loads, then it expands into the page.
+1. Header (fixed): `badawi.dev` wordmark left, email in the center, About, Experience, Work, Contact right (mono, uppercase, small, text rolls on hover). Fixed social column bottom-left (GitHub, LinkedIn, WhatsApp, email), "Move your mouse" caption bottom-right.
+2. Hero: avatar centered behind a split headline. Left: "Hello, I'm" (accent) + huge "BADAWI" + "AI & full-stack engineer" (mono). Right: "I build" + two stacked lines rolling through: AI products / full-stack apps / computer vision / LLM systems / data pipelines (first line accent and fading, second white). Short line: "Complete software, from the model to the interface to the deploy. Based in Cairo, building at Fixed Solutions." Burgundy rim glow behind the shoulders.
+3. About me: right half of the screen, words rise in. [TODO: Badawi's own 2–3 sentences].
+4. What I build: "WHAT I BUILD" title left, four dashed-frame cards right that expand on hover/tap and show a tools line (short paragraph each):
    - AI features: vision, OCR, LLM and RAG features that work on real data.
    - Full-stack apps: FastAPI and PostgreSQL backends, React frontends, admin dashboards, auth, APIs.
    - Data pipelines: moving, cleaning and modeling data, from messy sources to tables you can trust.
    - Deployment: Docker, CI/CD with GitHub Actions, running and monitoring in production.
    Closing line under the four: "I can deliver the whole thing, or the part you need."
 5. How I deliver: a real four-step process, shown in order: Plan (scope, architecture, timeline) → Build (model, backend, frontend, in small working releases) → Ship (deploy, test with real users) → Support (fixes, monitoring, improvements). One short sentence per step.
-6. Work: the five projects, each with its own small 3D scene, title, one-liner, stack, link to its page.
-7. Experience: timeline at Fixed Solutions from August 2024: AI Engineer Intern (Aug 2024 – Sep 2024), Junior AI Engineer (Oct 2024 – Sep 2025), AI Engineer (Oct 2025 – now). B.Sc. Computer Science, Faculty of Computers and Information ([TODO: years]). No freelance entry.
-8. Contact: big line "Have a product in mind? Let's build it." + email hello@badawi.dev (shown as selectable text), WhatsApp +201007347507, GitHub github.com/badawyy-A, LinkedIn linkedin.com/in/abdulrhman-badawi-020b8128b.
-9. Footer: © year Badawi · Cairo, Egypt.
+6. Experience: "My career & experience", vertical timeline that grows on scroll with a glowing dot; each row role + company, big year (NOW for current), date range. Timeline at Fixed Solutions from August 2024: AI Engineer Intern (Aug 2024 – Sep 2024), Junior AI Engineer (Oct 2024 – Sep 2025), AI Engineer (Oct 2025 – now). B.Sc. Computer Science, Faculty of Computers and Information ([TODO: years]). No freelance entry.
+7. Work: "My work", pinned horizontal carousel (vertical list on phones and under reduced motion); each box: number, title, category, summary, stack, and the project's own 3D scene linking to its page; last box "Something to build?" → contact.
+8. Contact: big uppercase line "Have a product in mind? Let's build it." + email hello@badawi.dev (shown as selectable text), WhatsApp +201007347507, GitHub github.com/badawyy-A, LinkedIn linkedin.com/in/abdulrhman-badawi-020b8128b.
+   Columns: Email + Location, Social links, credit + "© year Badawi · Cairo, Egypt" (no separate footer on the home page; project pages keep the footer).
 
 ## Project page template
 
