@@ -114,6 +114,14 @@ function scrollSequence(body: THREE.Object3D, view: View) {
   ScrollTrigger.refresh();
 }
 
+/** Entrance: the avatar starts below the frame and rises into place once the loading screen opens. */
+function riseIn(body: THREE.Object3D) {
+  body.position.y = -1.6;
+  const rise = () => gsap.to(body.position, { y: 0, duration: 1.8, delay: 0.15, ease: "power3.out" });
+  if (document.documentElement.classList.contains("loading")) window.addEventListener("site:ready", rise, { once: true });
+  else rise();
+}
+
 function Avatar({ reduce, choreo, onReady }: { reduce: boolean; choreo: boolean; onReady: () => void }) {
   const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
   const camera = useThree((state) => state.camera);
@@ -200,8 +208,11 @@ function Avatar({ reduce, choreo, onReady }: { reduce: boolean; choreo: boolean;
 
     if (!ready.current) {
       ready.current = true;
+      if (choreo && body.current) {
+        riseIn(body.current);
+        scrollSequence(body.current, view.current);
+      }
       onReady();
-      if (choreo && body.current) scrollSequence(body.current, view.current);
     }
   });
 
