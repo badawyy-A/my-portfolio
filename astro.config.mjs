@@ -1,9 +1,11 @@
 // @ts-check
 import { defineConfig, fontProviders } from "astro/config";
+import react from "@astrojs/react";
 
 export default defineConfig({
   site: "https://badawi.dev",
   devToolbar: { enabled: false },
+  integrations: [react()],
   fonts: [
     {
       name: "Schibsted Grotesk",
