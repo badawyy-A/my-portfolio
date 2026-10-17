@@ -1,0 +1,38 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base>
+  <section class="hero container">
+    <p class="mono hello">Hello, I'm</p>
+    <h1 class="name">BADAWI</h1>
+    <p class="role mono">AI &amp; full-stack engineer</p>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100dvh;
+    padding-block: var(--header-height);
+  }
+
+  .hello {
+    color: var(--accent);
+    font-size: var(--text-sm);
+  }
+
+  .name {
+    font-size: var(--text-hero);
+    font-weight: 900;
+    line-height: 0.85;
+    letter-spacing: var(--tracking-tight);
+    margin-block: var(--space-2) var(--space-6);
+  }
+
+  .role {
+    color: var(--muted);
+  }
+</style>
