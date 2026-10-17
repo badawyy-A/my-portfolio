@@ -1,11 +1,12 @@
 ---
 import Base from "../layouts/Base.astro";
+import Loader from "../components/Loader.astro";
 import Hero from "../components/Hero.astro";
 import About from "../components/About.astro";
 import Services from "../components/Services.astro";
 import Process from "../components/Process.astro";
-import Work from "../components/Work.astro";
 import Experience from "../components/Experience.astro";
+import Work from "../components/Work.astro";
 import Contact from "../components/Contact.astro";
 import HeroAvatar from "../components/three/HeroAvatar";
 import { getSite } from "../lib/content";
@@ -13,14 +14,19 @@ import { getSite } from "../lib/content";
 const site = await getSite();
 ---
 
-<Base>
-  <Hero name={site.name} role={site.role} intro={site.intro} phrases={site.phrases} links={site.links}>
+<Base home>
+  <Loader slot="before" />
+  <Hero name={site.name} role={site.role} intro={site.intro} phrases={site.phrases}>
     <HeroAvatar slot="avatar" client:idle />
   </Hero>
   <About about={site.about} />
   <Services services={site.services} closing={site.servicesClosing} />
   <Process steps={site.process} />
-  <Work />
   <Experience items={site.experience} />
-  <Contact line={site.contactLine} links={site.links} />
+  <Work />
+  <Contact line={site.contactLine} links={site.links} location={site.location} />
 </Base>
+
+<script>
+  import "../scripts/loader";
+</script>
