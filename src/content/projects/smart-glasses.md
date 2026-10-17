@@ -1,6 +1,7 @@
 ---
 title: Smart glasses
 summary: AI software for smart glasses, a memory aid and a vision assistant for blind users.
+category: Computer vision / LLM
 order: 1
 scene: glasses
 stack: [Python, OpenCV, Object detection, Vision-language models, Vector DB, Flutter]

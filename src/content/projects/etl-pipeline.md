@@ -1,6 +1,7 @@
 ---
 title: MongoDB to PostgreSQL ETL pipeline
 summary: Move data from MongoDB into PostgreSQL through three layers, then segment customers on the clean data.
+category: Data engineering / ML
 order: 5
 scene: etl
 stack: [PySpark, Airflow, MongoDB, PostgreSQL, scikit-learn, FastAPI]

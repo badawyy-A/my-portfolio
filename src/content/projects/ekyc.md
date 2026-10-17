@@ -1,6 +1,7 @@
 ---
 title: eKYC system
 summary: Verify someone's identity from a national ID card and a selfie.
+category: Computer vision / Identity
 order: 2
 scene: ekyc
 stack: [YOLO, OCR, InsightFace, FastAPI, PostgreSQL, React]

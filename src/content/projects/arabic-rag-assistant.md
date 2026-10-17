@@ -1,6 +1,7 @@
 ---
 title: Arabic RAG assistant
 summary: Ask questions about Egyptian law and get answers that cite the exact article.
+category: LLM / RAG
 order: 4
 scene: rag
 stack: [llama-index, Hugging Face embeddings, FastAPI, React]

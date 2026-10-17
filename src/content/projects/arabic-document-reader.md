@@ -1,6 +1,7 @@
 ---
 title: Arabic document reader
 summary: Turn scanned Arabic documents into clean, editable text.
+category: OCR / Documents
 order: 3
 scene: document
 stack: [PaddleOCR, DocLayout-YOLO, OpenCV, FastAPI, React]

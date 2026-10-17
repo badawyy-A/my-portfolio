@@ -12,6 +12,8 @@ const projects = defineCollection({
   schema: z.object({
     title: z.string().min(1),
     summary: z.string().min(1),
+    // short label under the title, e.g. "Computer vision / LLM"
+    category: z.string().min(1),
     order: z.number().int(),
     scene: z.enum(["glasses", "ekyc", "document", "rag", "etl"]),
     // short list for the card and the page header line
@@ -35,7 +37,9 @@ const site = defineCollection({
     intro: z.string(),
     phrases: z.array(z.string()).min(1),
     about: z.string(),
-    services: z.array(z.object({ title: z.string(), text: z.string() })).length(4),
+    services: z
+      .array(z.object({ title: z.string(), text: z.string(), tools: z.array(z.string()).min(1) }))
+      .length(4),
     servicesClosing: z.string(),
     process: z.array(z.object({ title: z.string(), text: z.string() })).length(4),
     experience: z
@@ -50,6 +54,7 @@ const site = defineCollection({
       )
       .min(1),
     contactLine: z.string(),
+    location: z.string(),
     links: z.object({
       email: z.union([z.email(), todo]),
       whatsapp: url,

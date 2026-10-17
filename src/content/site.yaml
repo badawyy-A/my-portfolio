@@ -13,12 +13,16 @@ about: "[TODO: Badawi's own 2–3 sentences about himself]"
 services:
   - title: AI features
     text: Vision, OCR, LLM and RAG features that work on real data.
+    tools: [OpenCV, YOLO, PaddleOCR, InsightFace, PyTorch, ONNX, llama-index, Hugging Face]
   - title: Full-stack apps
     text: FastAPI and PostgreSQL backends, React frontends, admin dashboards, auth and APIs.
+    tools: [FastAPI, PostgreSQL, SQLAlchemy, React, Flutter]
   - title: Data pipelines
     text: Moving, cleaning and modeling data, from messy sources to tables you can trust.
+    tools: [Python, pandas, PySpark, Airflow, MongoDB, PostgreSQL, scikit-learn]
   - title: Deployment
     text: Docker, CI/CD with GitHub Actions, and running and monitoring in production.
+    tools: [Docker, GitHub Actions]
 servicesClosing: I can deliver the whole thing, or the part you need.
 
 process:
@@ -50,6 +54,7 @@ experience:
     end: "[TODO: end year]"
 
 contactLine: Have a product in mind? Let's build it.
+location: Cairo, Egypt
 
 links:
   email: hello@badawi.dev

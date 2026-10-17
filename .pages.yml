@@ -25,6 +25,10 @@ content:
         label: One-line summary
         type: string
         required: true
+      - name: category
+        label: Category (short, e.g. "Computer vision / LLM")
+        type: string
+        required: true
       - name: order
         label: Position on the home page (1 = first)
         type: number
@@ -101,6 +105,7 @@ content:
         fields:
           - { name: title, label: Title, type: string, required: true }
           - { name: text, label: Text, type: text, required: true }
+          - { name: tools, label: Tools, type: string, list: true, required: true }
       - name: servicesClosing
         label: Line under What I build
         type: string
@@ -124,6 +129,10 @@ content:
           - { name: text, label: One line (optional), type: string }
       - name: contactLine
         label: Contact headline
+        type: string
+        required: true
+      - name: location
+        label: Location
         type: string
         required: true
       - name: links
