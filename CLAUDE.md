@@ -66,7 +66,7 @@ Accessibility: text contrast 4.5:1, visible focus states, real links/buttons, `p
 
 ## Home page, top to bottom
 
-0. Loading screen (full 3D sequence only): light screen, marquee "AI engineer / Full-stack engineer", dark pill counting to 100% while the avatar loads, then it expands into the page. Avatar entrance, one continuous movement: he starts curled down below the frame and unrolls upward like someone stretching awake (hips rise, spine straightens from the bottom up, head comes up last, crown first), stretches a little at the top, then settles while folding his arms into a natural crossed-arms pose like a reference photo Badawi sent: upper arms hanging nearly straight, forearms level across the lower chest, the top hand gripping the opposite upper arm, the lower hand tucked behind the other arm. Arm motion must look natural: joints staggered (upper arm, then forearm, then hand and fingers; under-arm first), elbows bend before the forearms swing across, collarbones roll forward slightly, arms hang from the shoulders while he is bent over. Resting arms hang close to the body with soft elbows (no A-pose). Hero pose: standing, arms crossed. His black T-shirt has "badawi.dev" on the chest ("badawi" cream, ".dev" burgundy), painted at runtime in the site font.
+0. Loading screen (full 3D sequence only): light screen, marquee "AI engineer / Full-stack engineer", dark pill counting to 100% while the avatar loads, then it expands into the page. Avatar entrance, one continuous movement: he starts curled down below the frame and unrolls upward like someone stretching awake (hips rise, spine straightens from the bottom up, head comes up last, crown first), stretches a little at the top, then settles standing relaxed. Arms hang from the shoulders while he is bent over. Hero pose: standing relaxed, arms hanging close to the body with soft elbows and gently curled fingers (no A-pose, no crossed arms: Badawi removed them on 2026-10-17). Any arm motion must look natural, with joints staggered rather than all moving at once.
 1. Header (fixed): `badawi.dev` wordmark left, email in the center, About, Experience, Work, Contact right (mono, uppercase, small, text rolls on hover). Fixed social column bottom-left (GitHub, LinkedIn, WhatsApp, email), "Move your mouse" caption bottom-right.
 2. Hero: avatar centered behind a split headline. Left: "Hello, I'm" (accent) + huge "BADAWI" + "AI & full-stack engineer" (mono). Right: "I build" + two stacked lines rolling through: AI products / full-stack apps / computer vision / LLM systems / data pipelines (first line accent and fading, second white). Short line: "Complete software, from the model to the interface to the deploy. Based in Cairo, building at Fixed Solutions." Burgundy rim glow behind the shoulders.
 3. About me: right half of the screen, words rise in. Text (written at Badawi's request): "I'm an AI and full-stack engineer based in Cairo. I joined Fixed Solutions as an intern in 2024 and now work there as an AI engineer, building computer vision, OCR and LLM features that have to work on real data. I build the whole path around a model: the backend and database, the interface people use, and the deploy that keeps it running."
@@ -88,18 +88,18 @@ Header line (stack), title, one-line summary, the project's 3D scene large, then
 
 ## Hero avatar
 
-Source: `model.fbx` from Badawi (MetaPerson avatar, ~51k triangles, 101 bones, textures embedded, no animations, T-pose, faces +Z, ~1.8 m tall).
+Source: `suit.glb` from Badawi, an Avaturn export (photo-based face, grey waistcoat, white shirt, tie; T-pose, faces +Z, ~1.86 m tall, Mixamo-style bone names without prefix, no facial blend shapes so no blinking). Not committed. Any avatar with the same bone names works with the rig code.
 
-Pipeline (do once, commit the output, not the FBX):
-1. Convert FBX → GLB with textures (e.g. Blender CLI import/export, or FBX2glTF).
-2. Compress with gltf-transform: meshopt or draco geometry, WebP/KTX2 textures at 1K max, drop unused maps. Target under 3 MB.
-3. Save as `public/models/avatar.glb`. Lazy-load the scene after the hero text paints; show a static fallback while loading and if WebGL is unavailable.
+Pipeline (do once per new avatar, commit only the output; details at the top of `scripts/avatar/prepare.mjs`):
+1. `node scripts/avatar/prepare.mjs suit.glb clean.glb`: drops the bundled idle animation, makes materials matte and non-metallic, hair double-sided.
+2. Compress with gltf-transform optimize: meshopt geometry, WebP textures at 1K max, no simplify/join/flatten. Target under 3 MB (currently ~0.95 MB).
+3. Save as `public/models/avatar.glb`, re-render `public/images/avatar-{wide,narrow}.webp` from the live hero and update their width/height in `Hero.astro`. The 3D lazy-loads after the hero text paints; the stills show while loading and when WebGL is unavailable.
 
 Behaviour (see `avatar-reference.js`, it already works in the preview):
-- Arms down from T-pose: rotate `LeftArm`/`RightArm` about world Z by ∓1.22 rad (sign by side) and +0.08 rad about world X; forearms ±0.12 rad about world Y.
+- Arms down from T-pose: rotate `LeftArm`/`RightArm` about world Z by ∓1.36 rad (sign by side) and +0.05 rad about world X; forearms ±0.12 rad about world Y and slightly bent.
 - Head follows the pointer: rotate on top of the bind pose each frame, `Head` yaw 0.55 / pitch 0.6, `Neck` 0.35 / 0.35, `Spine2` yaw 0.15 of the smoothed target (target yaw = x·0.7, pitch = y·0.35, easing 0.07). Mouse right turns the face right; mouse below tilts it down.
 - Idle after 4 s without pointer movement: slow look-around (sin waves), tiny breathing on the spine.
-- Camera: fov 26, at head height, z ≈ 1.55 (1.9 on narrow screens), framing chest up.
+- Camera: fov 26, at head height, z ≈ 1.75 (1.95 on narrow screens), framing chest up. The head is held 0.1 rad higher than neutral because the photo-based face has slightly lowered eyes.
 - Lights: warm hemisphere + key from top-left + soft fill, two `#D9455F` rim lights from behind. ACES tone mapping, sRGB output, low specular so skin is not shiny.
 
 ## Project 3D scenes (all procedural in three.js, no model files)
