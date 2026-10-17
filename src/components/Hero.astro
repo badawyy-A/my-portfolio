@@ -1,0 +1,212 @@
+---
+import SocialLinks from "./SocialLinks.astro";
+import type { Links } from "../lib/content";
+
+interface Props {
+  name: string;
+  role: string;
+  intro: string;
+  phrases: string[];
+  links: Links;
+}
+
+const { name, role, intro, phrases, links } = Astro.props;
+const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
+---
+
+<section class="hero" aria-labelledby="hero-title" data-hero>
+  <div class="stage" aria-hidden="true">
+    <div class="glow"></div>
+    <slot name="avatar" />
+    <div class="fade"></div>
+  </div>
+
+  <div class="container content">
+    <h1 id="hero-title" class="left">
+      <span class="mono hello">Hello, I'm</span>
+      <span class="name">{name.toUpperCase()}</span>
+    </h1>
+
+    <div class="right">
+      <p class="mono role">{role}</p>
+      <p class="build">
+        <span class="visually-hidden">I build {phraseList}.</span>
+        <span aria-hidden="true">
+          I build
+          <span class="phrase" data-phrases={JSON.stringify(phrases)}>{phrases[0]}</span>
+        </span>
+      </p>
+      <p class="intro">{intro}</p>
+    </div>
+  </div>
+
+  <div class="container bottom">
+    <p class="mono caption">Move your mouse.</p>
+    <SocialLinks links={links} />
+  </div>
+</section>
+
+<script>
+  const el = document.querySelector<HTMLElement>("[data-phrases]");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (el && !reduce) {
+    const phrases: string[] = JSON.parse(el.dataset.phrases ?? "[]");
+    let i = 0;
+    setInterval(() => {
+      el.classList.add("out");
+      setTimeout(() => {
+        i = (i + 1) % phrases.length;
+        el.textContent = phrases[i];
+        el.classList.remove("out");
+      }, 260);
+    }, 2600);
+  }
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 100svh;
+    padding-top: var(--header-height);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  .glow {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    width: min(90vw, 62rem);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    background: radial-gradient(closest-side, rgb(107 20 39 / 0.55), rgb(107 20 39 / 0.18) 55%, transparent);
+  }
+
+  .fade {
+    position: absolute;
+    inset: auto 0 0;
+    height: 35%;
+    background: linear-gradient(to bottom, transparent, var(--bg) 85%);
+    pointer-events: none;
+  }
+
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .hello {
+    color: var(--accent);
+    font-size: var(--text-sm);
+  }
+
+  .name {
+    font-size: clamp(3.5rem, 8.4vw, 9.5rem);
+    font-weight: 900;
+    line-height: 0.82;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .right {
+    justify-self: end;
+    width: min(100%, 23rem);
+  }
+
+  .role {
+    color: var(--muted);
+  }
+
+  .build {
+    margin-top: var(--space-3);
+    font-size: clamp(1.75rem, 1rem + 2.2vw, 3rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .phrase {
+    display: block;
+    color: var(--accent);
+    transition:
+      opacity 260ms var(--ease-out),
+      translate 260ms var(--ease-out);
+  }
+
+  .phrase:global(.out) {
+    opacity: 0;
+    translate: 0 0.15em;
+  }
+
+  .intro {
+    margin-top: var(--space-6);
+    color: var(--muted);
+  }
+
+  .bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-8);
+  }
+
+  .caption {
+    color: var(--muted);
+    visibility: hidden;
+  }
+
+  :global([data-avatar="ready"]) .caption {
+    visibility: visible;
+  }
+
+  @media (hover: none) {
+    .caption {
+      display: none;
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .content {
+      grid-template-columns: 1fr;
+      align-content: end;
+      gap: var(--space-6);
+      padding-top: 46svh;
+    }
+
+    .glow {
+      top: 30%;
+    }
+
+    .name {
+      font-size: min(19vw, 6rem);
+    }
+
+    .right {
+      justify-self: start;
+      width: 100%;
+    }
+
+    .bottom {
+      padding-block: var(--space-6);
+    }
+  }
+</style>
