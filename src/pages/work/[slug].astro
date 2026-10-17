@@ -4,8 +4,7 @@ import Base from "../../layouts/Base.astro";
 import SceneFrame from "../../components/SceneFrame.astro";
 import FlowDiagram from "../../components/FlowDiagram.astro";
 import Text from "../../components/Text.astro";
-import Todo from "../../components/Todo.astro";
-import { getProjects, isTodo } from "../../lib/content";
+import { getProjects } from "../../lib/content";
 
 export async function getStaticPaths() {
   const projects = await getProjects();
@@ -13,7 +12,7 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props;
-const { title, summary, stack, layers, flow, repo, scene } = project.data;
+const { title, summary, stack, layers, flow, scene } = project.data;
 const { Content } = await render(project);
 ---
 
@@ -55,12 +54,6 @@ const { Content } = await render(project);
         </dl>
       </section>
 
-      <section aria-labelledby="code-title">
-        <h2 id="code-title">Code</h2>
-        <p class="repo">
-          {isTodo(repo) ? <Todo text={repo} /> : <a href={repo} rel="noopener">{repo.replace("https://", "")}</a>}
-        </p>
-      </section>
     </div>
   </article>
 </Base>
@@ -169,11 +162,6 @@ const { Content } = await render(project);
 
   .sep {
     color: var(--muted);
-  }
-
-  .repo {
-    margin-top: var(--space-6);
-    font-size: var(--text-lg);
   }
 
   @media (max-width: 40rem) {

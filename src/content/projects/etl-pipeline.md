@@ -15,8 +15,6 @@ layers:
     items: [MongoDB source, PostgreSQL warehouse]
   - name: Frontend
     items: [React, Recharts]
-  - name: Deployment
-    items: ["[TODO: how it is deployed]"]
 flow:
   - MongoDB
   - L1 Raw
@@ -24,7 +22,6 @@ flow:
   - L3 Business
   - Segmentation
   - Dashboard
-repo: "[TODO: repo URL]"
 ---
 
 ## Problem

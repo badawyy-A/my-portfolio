@@ -47,7 +47,7 @@ content:
         required: true
         fields:
           - name: name
-            label: Layer (Model, Backend, Database, Frontend, Deployment)
+            label: Layer (Model, Backend, Database, Frontend)
             type: string
             required: true
           - name: items
@@ -59,10 +59,6 @@ content:
         label: How it works, steps in order
         type: string
         list: true
-        required: true
-      - name: repo
-        label: Code link (https://...)
-        type: string
         required: true
       - name: body
         label: Problem, Features, How it works

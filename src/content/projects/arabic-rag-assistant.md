@@ -13,15 +13,12 @@ layers:
     items: ["[TODO: vector store]"]
   - name: Frontend
     items: [React chat]
-  - name: Deployment
-    items: ["[TODO: how it is deployed]"]
 flow:
   - Laws split by article
   - Embeddings
   - Retrieve articles
   - LLM answers
   - Cited answer
-repo: "[TODO: repo URL]"
 ---
 
 ## Problem

@@ -13,8 +13,6 @@ layers:
     items: [Vector database]
   - name: Frontend
     items: [Flutter app]
-  - name: Deployment
-    items: ["[TODO: how it is deployed]"]
 flow:
   - Two cameras
   - Stereo depth
@@ -22,7 +20,6 @@ flow:
   - Vector DB
   - LLM answers
   - Flutter app
-repo: "[TODO: repo URL]"
 ---
 
 ## Problem

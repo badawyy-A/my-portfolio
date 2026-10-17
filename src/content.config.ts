@@ -22,7 +22,6 @@ const projects = defineCollection({
       .min(1),
     // steps of the "How it works" diagram, in order
     flow: z.array(z.string()).min(2),
-    repo: url,
   }),
 });
 

@@ -13,8 +13,6 @@ layers:
     items: [PostgreSQL]
   - name: Frontend
     items: [React admin dashboard]
-  - name: Deployment
-    items: ["[TODO: how it is deployed]"]
 flow:
   - ID capture
   - Data extraction
@@ -22,7 +20,6 @@ flow:
   - Liveness
   - Face match
   - Decision
-repo: "[TODO: repo URL]"
 ---
 
 ## Problem

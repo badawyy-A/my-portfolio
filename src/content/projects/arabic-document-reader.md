@@ -13,8 +13,6 @@ layers:
     items: ["[TODO: storage, if any]"]
   - name: Frontend
     items: [React]
-  - name: Deployment
-    items: ["[TODO: how it is deployed]"]
 flow:
   - Preprocess
   - Layout detection
@@ -22,7 +20,6 @@ flow:
   - Cleaning
   - Spell correction
   - Export
-repo: "[TODO: repo URL]"
 ---
 
 ## Problem
