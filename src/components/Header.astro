@@ -75,4 +75,18 @@ const links = [
       gap: var(--space-1) var(--space-3);
     }
   }
+
+  @media (max-width: 24rem) {
+    .inner {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: var(--space-1);
+      padding-block: var(--space-3);
+    }
+
+    ul {
+      justify-content: flex-start;
+    }
+  }
 </style>
