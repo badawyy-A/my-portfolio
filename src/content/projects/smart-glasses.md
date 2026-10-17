@@ -8,7 +8,7 @@ layers:
   - name: Model
     items: [OpenCV stereo calibration, rectification and disparity, Object detection, Vision-language models, LLM APIs]
   - name: Backend
-    items: [Python, "[TODO: API framework]"]
+    items: [Python]
   - name: Database
     items: [Vector database]
   - name: Frontend

@@ -6,11 +6,9 @@ scene: rag
 stack: [llama-index, Hugging Face embeddings, FastAPI, React]
 layers:
   - name: Model
-    items: [Hugging Face embeddings, "[TODO: which LLM]"]
+    items: [Hugging Face embeddings, LLM]
   - name: Backend
     items: [llama-index, FastAPI]
-  - name: Database
-    items: ["[TODO: vector store]"]
   - name: Frontend
     items: [React chat]
 flow:

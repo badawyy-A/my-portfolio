@@ -9,8 +9,6 @@ layers:
     items: [PaddleOCR, DocLayout-YOLO, OpenCV, Arabic spell correction]
   - name: Backend
     items: [FastAPI]
-  - name: Database
-    items: ["[TODO: storage, if any]"]
   - name: Frontend
     items: [React]
 flow:
