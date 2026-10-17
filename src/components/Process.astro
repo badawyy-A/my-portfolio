@@ -1,17 +1,16 @@
 ---
-import SectionHead from "./SectionHead.astro";
-
 interface Props {
   steps: { title: string; text: string }[];
 }
 const { steps } = Astro.props;
 ---
 
-<section id="process" class="section container" aria-labelledby="process-title">
-  <SectionHead id="process" label="How I deliver" title="The same four steps on every project." />
-  <ol class="steps">
+<section class="process section-container" id="process" aria-labelledby="process-title">
+  <h2 id="process-title" class="title">How I <span>deliver</span></h2>
+  <ol class="steps" data-frames>
     {steps.map((step, i) => (
-      <li data-reveal>
+      <li class="step">
+        <span class="corner" aria-hidden="true"></span>
         <p class="mono index">{String(i + 1).padStart(2, "0")}</p>
         <h3>{step.title}</h3>
         <p class="text">{step.text}</p>
@@ -21,31 +20,87 @@ const { steps } = Astro.props;
 </section>
 
 <style>
+  .process {
+    position: relative;
+    z-index: 2;
+    padding-block: 120px;
+  }
+
+  h2 {
+    margin-bottom: 70px;
+    font-size: 70px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  h2 span {
+    color: var(--accent);
+  }
+
   .steps {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-8);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 40px;
     padding: 0;
     list-style: none;
   }
 
-  li {
+  .step {
     position: relative;
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--line);
+    padding: 34px 28px 40px;
+    border: 1px dashed rgb(237 230 227 / 0.22);
   }
 
-  /* arrow head on the line, pointing to the next step */
-  li:not(:last-child)::after {
+  /* arrow to the next step */
+  .step:not(:last-child) > .text::after {
+    content: "→";
+    position: absolute;
+    top: 50%;
+    right: -30px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    translate: 0 -50%;
+  }
+
+  /* bracket corners, same as the What I build cards */
+  .step::before,
+  .step::after,
+  .corner::before,
+  .corner::after {
     content: "";
     position: absolute;
-    top: -4px;
-    right: calc(var(--space-8) / -2 - 4px);
-    width: 7px;
-    height: 7px;
-    border-top: 1px solid var(--accent);
-    border-right: 1px solid var(--accent);
-    rotate: 45deg;
+    width: 10px;
+    height: 10px;
+    border: 4px solid var(--fg);
+  }
+
+  .step::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .step::after {
+    bottom: -2px;
+    left: -2px;
+    border-top: none;
+    border-right: none;
+  }
+
+  .corner::before {
+    top: -2px;
+    right: -2px;
+    border-bottom: none;
+    border-left: none;
+  }
+
+  .corner::after {
+    right: -2px;
+    bottom: -2px;
+    border-top: none;
+    border-left: none;
   }
 
   .index {
@@ -53,33 +108,88 @@ const { steps } = Astro.props;
   }
 
   h3 {
-    margin-top: var(--space-4);
-    font-size: var(--text-2xl);
+    margin-top: 1.4rem;
+    font-size: 34px;
+    font-weight: 600;
+    text-transform: uppercase;
   }
 
   .text {
-    margin-top: var(--space-3);
+    margin-top: 0.8rem;
     color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
   }
 
-  @media (max-width: 56rem) {
-    .steps {
-      grid-template-columns: repeat(2, 1fr);
-      row-gap: var(--space-12);
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.js) .steps .step {
+      opacity: 0;
     }
 
-    li:nth-child(2)::after {
+    .steps:global(.is-in) .step {
+      animation: step-in 0.6s var(--ease-out) forwards;
+    }
+
+    .steps:global(.is-in) .step:nth-child(2) {
+      animation-delay: 0.12s;
+    }
+
+    .steps:global(.is-in) .step:nth-child(3) {
+      animation-delay: 0.24s;
+    }
+
+    .steps:global(.is-in) .step:nth-child(4) {
+      animation-delay: 0.36s;
+    }
+  }
+
+  @keyframes step-in {
+    from {
+      opacity: 0;
+      translate: 0 24px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  @media (max-width: 1400px) {
+    h2 {
+      font-size: 50px;
+    }
+
+    h3 {
+      font-size: 26px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .step:nth-child(2) > .text::after {
       display: none;
     }
   }
 
-  @media (max-width: 34rem) {
-    .steps {
-      grid-template-columns: 1fr;
-      row-gap: var(--space-8);
+  @media (max-width: 600px) {
+    .process {
+      padding-block: 70px;
     }
 
-    li::after {
+    h2 {
+      margin-bottom: 40px;
+      font-size: 42px;
+    }
+
+    .steps {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .step > .text::after {
       display: none;
     }
   }
