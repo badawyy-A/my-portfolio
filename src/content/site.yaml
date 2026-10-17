@@ -34,13 +34,16 @@ process:
 experience:
   - role: AI Engineer
     org: Fixed Solutions
-    start: "[TODO: start year]"
+    start: Oct 2025
     end: now
-  - role: Freelance full-stack and AI engineer
-    org: Independent
-    start: "[TODO: start year]"
-    end: now
-    text: Complete software for clients.
+  - role: Junior AI Engineer
+    org: Fixed Solutions
+    start: Oct 2024
+    end: Sep 2025
+  - role: AI Engineer Intern
+    org: Fixed Solutions
+    start: Aug 2024
+    end: Sep 2024
   - role: B.Sc. Computer Science
     org: Faculty of Computers and Information
     start: "[TODO: start year]"
