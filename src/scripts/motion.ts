@@ -7,6 +7,8 @@ import { SplitText } from "gsap/SplitText";
 import "lenis/dist/lenis.css";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
+// phone address bars resize the viewport while scrolling; don't re-measure every trigger for that
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 const root = document.documentElement;
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

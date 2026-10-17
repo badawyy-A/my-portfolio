@@ -94,6 +94,15 @@ const { about } = Astro.props;
     }
   }
 
+  /* phones and tablets with the scroll sequence: the text arrives under the avatar */
+  @media (max-width: 1024px) {
+    :global(html.choreo-m) .about-section {
+      align-items: flex-end;
+      min-height: 100svh;
+      padding-bottom: 10svh;
+    }
+  }
+
   @media (min-width: 1950px) {
     p {
       font-size: 2.5rem;

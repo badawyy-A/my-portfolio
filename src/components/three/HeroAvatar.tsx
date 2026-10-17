@@ -114,6 +114,29 @@ function scrollSequence(body: THREE.Object3D, view: View) {
   ScrollTrigger.refresh();
 }
 
+/**
+ * Phones and tablets: the avatar stays at the top of the screen, turns and steps back while the
+ * About text scrolls up under it, then lifts away like on desktop.
+ */
+function scrollSequenceMobile(body: THREE.Object3D, view: View) {
+  const stage = document.querySelector<HTMLElement>(".stage");
+  if (!stage) return;
+  const scrub = { scrub: true, invalidateOnRefresh: true };
+
+  gsap
+    .timeline({ scrollTrigger: { trigger: ".landing", start: "top top", end: "bottom top", ...scrub } })
+    .fromTo(body.rotation, { y: 0 }, { y: 0.35, duration: 1 }, 0)
+    .fromTo(view, { dz: 0 }, { dz: 0.45, duration: 1 }, 0)
+    .fromTo(stage, { yPercent: 0 }, { yPercent: -10, duration: 1 }, 0)
+    .to(".landing-container", { opacity: 0, duration: 0.35 }, 0.25);
+
+  gsap
+    .timeline({ scrollTrigger: { trigger: ".about-section", start: "center 70%", end: "bottom top", ...scrub } })
+    .to(stage, { yPercent: -110, duration: 1, ease: "none" }, 0);
+
+  ScrollTrigger.refresh();
+}
+
 /** Entrance: the avatar starts below the frame and rises into place once the loading screen opens. */
 function riseIn(body: THREE.Object3D) {
   body.position.y = -1.6;
@@ -122,7 +145,9 @@ function riseIn(body: THREE.Object3D) {
   else rise();
 }
 
-function Avatar({ reduce, choreo, onReady }: { reduce: boolean; choreo: boolean; onReady: () => void }) {
+type Mode = "desktop" | "mobile" | null;
+
+function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onReady: () => void }) {
   const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
@@ -161,14 +186,15 @@ function Avatar({ reduce, choreo, onReady }: { reduce: boolean; choreo: boolean;
     camera.position.set(0, y + v.dy, z + v.dz);
     camera.lookAt(0, lookAt + v.dlook, 0);
 
-    // past the hero the head stops following the mouse and looks toward the content on the right
-    const scrolled = choreo && window.scrollY > 200;
+    // past the hero the head stops following the mouse and looks toward the content
+    // (to the right on desktop, down at the text on phones)
+    const scrolled = mode !== null && window.scrollY > 200;
     const idle = performance.now() - pointer.current.last > 4000;
     let gx = idle && !reduce ? Math.sin(t * 0.4) * 0.25 : pointer.current.x;
     let gy = idle && !reduce ? Math.sin(t * 0.27) * 0.08 : pointer.current.y;
     if (scrolled) {
-      gx = 0.55;
-      gy = 0.1;
+      gx = mode === "desktop" ? 0.55 : 0.25;
+      gy = mode === "desktop" ? 0.1 : 0.55;
     }
 
     // 0.07 per frame at 60 fps, independent of the actual frame rate
@@ -208,10 +234,11 @@ function Avatar({ reduce, choreo, onReady }: { reduce: boolean; choreo: boolean;
 
     if (!ready.current) {
       ready.current = true;
-      if (choreo && body.current) {
+      if (mode === "desktop" && body.current) {
         riseIn(body.current);
         scrollSequence(body.current, view.current);
       }
+      if (mode === "mobile" && body.current) scrollSequenceMobile(body.current, view.current);
       onReady();
     }
   });
@@ -242,12 +269,13 @@ export default function HeroAvatar() {
   const [supported, setSupported] = useState(false);
   const [reduce, setReduce] = useState(false);
   const [ready, setReady] = useState(false);
-  const [choreo, setChoreo] = useState(false);
+  const [mode, setMode] = useState<Mode>(null);
 
   useEffect(() => {
     setSupported(hasWebGL());
     setReduce(prefersReducedMotion());
-    setChoreo(document.documentElement.classList.contains("choreo"));
+    const root = document.documentElement.classList;
+    setMode(root.contains("choreo") ? "desktop" : root.contains("choreo-m") ? "mobile" : null);
   }, []);
 
   const onReady = () => {
@@ -261,7 +289,7 @@ export default function HeroAvatar() {
       {supported && (
         <Canvas
           frameloop={inView ? "always" : "never"}
-          dpr={[1, 1.75]}
+          dpr={mode === "mobile" ? [1, 1.5] : [1, 1.75]}
           gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
           camera={{ fov: 26, near: 0.05, far: 20, position: [0, 1.55, 1.55] }}
           onCreated={({ gl }) => {
@@ -272,7 +300,7 @@ export default function HeroAvatar() {
         >
           <Lights />
           <Suspense fallback={null}>
-            <Avatar reduce={reduce} choreo={choreo} onReady={onReady} />
+            <Avatar reduce={reduce} mode={mode} onReady={onReady} />
           </Suspense>
         </Canvas>
       )}
