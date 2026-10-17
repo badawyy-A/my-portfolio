@@ -8,7 +8,11 @@ phrases:
   - LLM systems
   - data pipelines
 
-about: "[TODO: Badawi's own 2–3 sentences about himself]"
+about: >-
+  I'm an AI and full-stack engineer based in Cairo. I joined Fixed Solutions as an intern in 2024
+  and now work there as an AI engineer, building computer vision, OCR and LLM features that have to
+  work on real data. I build the whole path around a model: the backend and database, the interface
+  people use, and the deploy that keeps it running.
 
 services:
   - title: AI features
@@ -50,8 +54,8 @@ experience:
     end: Sep 2024
   - role: B.Sc. Computer Science
     org: Faculty of Computers and Information
-    start: "[TODO: start year]"
-    end: "[TODO: end year]"
+    start: "2021"
+    end: "2025"
 
 contactLine: Have a product in mind? Let's build it.
 location: Cairo, Egypt
