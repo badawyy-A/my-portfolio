@@ -1,22 +1,18 @@
 ---
-import SocialLinks from "./SocialLinks.astro";
-import type { Links } from "../lib/content";
-
 interface Props {
   name: string;
   role: string;
   intro: string;
   phrases: string[];
-  links: Links;
 }
 
-const { name, role, intro, phrases, links } = Astro.props;
+const { name, role, intro, phrases } = Astro.props;
 const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
 ---
 
-<section class="hero" aria-labelledby="hero-title" data-hero>
+<section class="landing" id="top" aria-labelledby="hero-title" data-hero>
   <div class="stage" aria-hidden="true">
-    <div class="glow"></div>
+    <div class="rim-wrap"><div class="rim"></div></div>
     <picture class="poster">
       <source media="(max-width: 48rem)" srcset="/images/avatar-narrow.webp" width="780" height="1080" />
       <img src="/images/avatar-wide.webp" alt="" width="998" height="1250" fetchpriority="high" />
@@ -25,73 +21,74 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
     <div class="fade"></div>
   </div>
 
-  <div class="container content">
-    <h1 id="hero-title" class="left">
-      <span class="mono hello">Hello, I'm</span>
-      <span class="name">{name.toUpperCase()}</span>
-    </h1>
-
-    <div class="right">
-      <p class="mono role">{role}</p>
-      <p class="build">
-        <span class="visually-hidden">I build {phraseList}.</span>
-        <span aria-hidden="true">
-          I build
-          <span class="phrase" data-phrases={JSON.stringify(phrases)}>{phrases[0]}</span>
-        </span>
-      </p>
-      <p class="intro">{intro}</p>
+  <div class="landing-container">
+    <div class="landing-intro">
+      <h1 id="hero-title" data-intro="chars">
+        <span class="hello">Hello, I'm</span>
+        <span class="name">{name.toUpperCase()}</span>
+      </h1>
+      <p class="mono role" data-intro="fade">{role}</p>
     </div>
-  </div>
 
-  <div class="container bottom">
-    <p class="mono caption">Move your mouse.</p>
-    <SocialLinks links={links} />
+    <div class="landing-info">
+      <p class="lead" aria-hidden="true" data-intro="chars">I build</p>
+      <p class="visually-hidden">I build {phraseList}.</p>
+      <div class="cycle" aria-hidden="true" data-phrases={JSON.stringify(phrases)} data-intro="rise">
+        <span class="line line-1">{phrases[0]}</span>
+        <span class="line line-2">{phrases[1 % phrases.length]}</span>
+      </div>
+      <p class="intro" data-intro="fade">{intro}</p>
+    </div>
   </div>
 </section>
 
-<script>
-  const el = document.querySelector<HTMLElement>("[data-phrases]");
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (el && !reduce) {
-    const phrases: string[] = JSON.parse(el.dataset.phrases ?? "[]");
-    let i = 0;
-    setInterval(() => {
-      el.classList.add("out");
-      setTimeout(() => {
-        i = (i + 1) % phrases.length;
-        el.textContent = phrases[i];
-        el.classList.remove("out");
-      }, 260);
-    }, 2600);
-  }
-</script>
-
 <style>
-  .hero {
+  .landing {
     position: relative;
-    display: grid;
-    grid-template-rows: 1fr auto;
     min-height: 100svh;
-    padding-top: var(--header-height);
-    overflow: hidden;
     isolation: isolate;
   }
 
   .stage {
     position: absolute;
     inset: 0;
-    z-index: -1;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
   }
 
-  .glow {
+  /* glow behind the shoulders */
+  .rim {
     position: absolute;
+    top: 50%;
     left: 50%;
-    top: 42%;
-    width: min(90vw, 62rem);
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    background: radial-gradient(closest-side, rgb(107 20 39 / 0.55), rgb(107 20 39 / 0.18) 55%, transparent);
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background-color: #d9455f;
+    box-shadow: inset 66px 35px 85px 0 rgb(107 20 39 / 0.8);
+    filter: blur(50px);
+    transform: translate(-50%, 55%) scale(1.4);
+  }
+
+  .rim-wrap {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* with the full sequence the glow rises once the loading screen is gone */
+  :global(html.choreo) .rim {
+    opacity: 0;
+    transform: translate(-50%, 100%) scale(1.4);
+    transition:
+      opacity 2s var(--ease-out) 0.2s,
+      transform 2s var(--ease-out) 0.2s;
+  }
+
+  :global(html.choreo:not(.loading)) [data-avatar="ready"] .rim,
+  :global(html.choreo:not(.loading) [data-avatar="ready"]) .rim {
+    opacity: 1;
+    transform: translate(-50%, 55%) scale(1.4);
   }
 
   /* static render of the avatar: shown while the 3D loads, and when WebGL is off */
@@ -126,124 +123,179 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
     inset: auto 0 0;
     height: 35%;
     background: linear-gradient(to bottom, transparent, var(--bg) 85%);
-    pointer-events: none;
   }
 
-  .content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    gap: var(--space-8);
+  /* large screens with the full scroll sequence: the avatar stays fixed while the page moves */
+  :global(html.choreo) .stage {
+    position: fixed;
+    height: 100vh;
+    z-index: 1;
   }
 
-  .left {
+  :global(html.choreo) .fade {
+    display: none;
+  }
+
+  .landing-container {
+    position: relative;
+    z-index: 2;
+    width: var(--c-width);
+    max-width: var(--c-max);
+    min-height: 100svh;
+    margin-inline: auto;
+  }
+
+  h1 {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: 0.35em;
     font-size: var(--text-base);
     font-weight: 400;
     letter-spacing: 0;
   }
 
-  .hello {
+  .hello,
+  .lead {
     color: var(--accent);
-    font-size: var(--text-sm);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    line-height: 1.1;
   }
 
   .name {
-    font-size: clamp(3.5rem, 8.4vw, 9.5rem);
+    font-size: clamp(3rem, 6vw, 7.5rem);
     font-weight: 900;
-    line-height: 0.82;
+    line-height: 0.85;
     letter-spacing: var(--tracking-tight);
-  }
-
-  .right {
-    justify-self: end;
-    width: min(100%, 23rem);
   }
 
   .role {
+    margin-top: 1.2rem;
     color: var(--muted);
   }
 
-  .build {
-    margin-top: var(--space-3);
-    font-size: clamp(1.75rem, 1rem + 2.2vw, 3rem);
+  .cycle {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.35em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .line {
+    display: flex;
+    overflow: hidden;
     font-weight: 800;
-    line-height: 1.02;
-    letter-spacing: var(--tracking-tight);
+    letter-spacing: -0.01em;
+    line-height: 1.05;
   }
 
-  /* the phrase wipes out and back in; color stays solid so it never drops below contrast */
-  .phrase {
-    display: block;
-    width: fit-content;
+  .line :global(.char) {
+    display: inline-block;
+    white-space: pre;
+  }
+
+  /* first line sits behind the second, fading into the background */
+  .line-1 {
+    position: relative;
     color: var(--accent);
-    clip-path: inset(-0.2em 0 -0.2em 0);
-    transition: clip-path 260ms var(--ease-out);
+    font-size: clamp(2rem, 3.4vw, 4.4rem);
   }
 
-  .phrase:global(.out) {
-    clip-path: inset(-0.2em 100% -0.2em 0);
+  .line-1::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 -20% 0;
+    z-index: 3;
+    background-image: linear-gradient(0deg, var(--bg) 40%, rgb(10 7 8 / 0) 110%);
+  }
+
+  .line-2 {
+    position: relative;
+    z-index: 4;
+    margin-top: -0.45em;
+    font-size: clamp(1.6rem, 2.7vw, 3.6rem);
   }
 
   .intro {
-    margin-top: var(--space-6);
+    max-width: 22rem;
+    margin-top: 1.4rem;
     color: var(--muted);
+    font-size: var(--text-sm);
   }
 
-  .bottom {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    padding-block: var(--space-8);
-  }
+  @media (min-width: 1025px) {
+    .landing,
+    .landing-container {
+      height: 100vh;
+      min-height: 0;
+    }
 
-  .caption {
-    color: var(--muted);
-    visibility: hidden;
-  }
+    .landing-intro {
+      position: absolute;
+      top: 42%;
+      right: 66%;
+      translate: 0 -50%;
+    }
 
-  :global([data-avatar="ready"]) .caption {
-    visibility: visible;
-  }
-
-  @media (hover: none) {
-    .caption {
-      display: none;
+    .landing-info {
+      position: absolute;
+      top: 52%;
+      left: 66%;
+      translate: 0 -50%;
     }
   }
 
-  @media (max-width: 48rem) {
-    .content {
-      grid-template-columns: 1fr;
-      align-content: end;
-      gap: var(--space-6);
-      padding-top: 46svh;
+  @media (min-width: 1200px) {
+    .landing-intro {
+      right: 69%;
     }
 
+    .landing-info {
+      left: 69%;
+    }
+  }
+
+  @media (min-width: 1600px) {
+    .hello,
+    .lead {
+      font-size: 32px;
+    }
+  }
+
+  /* phones and tablets: avatar on top, text below */
+  @media (max-width: 1024px) {
     .stage {
       bottom: auto;
-      height: 64svh;
+      height: 62svh;
     }
 
-    .glow {
-      top: 45%;
+    .rim {
+      top: 0;
+      transform: translate(-50%, 10%) scale(1.1);
+    }
+
+    .landing-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 2rem;
+      padding-top: 52svh;
+      padding-bottom: 3rem;
     }
 
     .name {
-      font-size: min(19vw, 6rem);
+      font-size: min(19vw, 7rem);
     }
 
-    .right {
-      justify-self: start;
-      width: 100%;
+    .line-1 {
+      font-size: clamp(1.8rem, 7vw, 3.4rem);
     }
 
-    .bottom {
-      padding-block: var(--space-6);
+    .line-2 {
+      font-size: clamp(1.5rem, 6vw, 2.8rem);
     }
   }
 </style>
