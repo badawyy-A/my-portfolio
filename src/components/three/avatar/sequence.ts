@@ -7,7 +7,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 /**
  * Values the intro and scroll sequence animate and the frame loop applies: camera offsets on top of
- * the base framing, and how far each pose is blended in (crouch, arms crossed, seated, typing), plus
+ * the base framing, and how far each pose is blended in (crouch, seated, typing), plus
  * an extra head nod and the laptop screen brightness. While `scripted` is 1 the head ignores the mouse.
  */
 export type View = {
@@ -17,7 +17,6 @@ export type View = {
   crouch: number;
   nod: number;
   shrug: number;
-  cross: number;
   sit: number;
   typing: number;
   screen: number;
@@ -92,11 +91,11 @@ export function scrollSequenceMobile(body: THREE.Object3D, view: View) {
  * Entrance once the loading screen opens, as one continuous movement: he starts curled down below the
  * frame and unrolls upward like someone stretching awake. The hips lift the whole way while the spine
  * straightens from the bottom up and the head comes up last, crown first; at the top he stretches a
- * little (chest open, shoulders up), then settles while his arms fold.
+ * little (chest open, shoulders up), then settles, standing relaxed with his arms at his sides.
  */
 export function crouchIntro(body: THREE.Object3D, view: View) {
   body.position.y = -0.95;
-  Object.assign(view, { crouch: 1, nod: 0.55, shrug: 0, cross: 0, scripted: 1 });
+  Object.assign(view, { crouch: 1, nod: 0.55, shrug: 0, scripted: 1 });
   const ease = "sine.inOut";
   const play = () =>
     gsap
@@ -106,9 +105,7 @@ export function crouchIntro(body: THREE.Object3D, view: View) {
       .to(view, { nod: -0.1, duration: 2.4, ease }, 0.6)
       .to(view, { shrug: 1, duration: 0.7, ease }, 2.1)
       .to(view, { crouch: 0, nod: 0, shrug: 0, duration: 0.9, ease }, 2.85)
-      // the arm fold is timed per joint in the frame loop; this is just its overall progress
-      .to(view, { cross: 1, duration: 1.7, ease: "none" }, 2.7)
-      .set(view, { scripted: 0 }, 4.5);
+      .set(view, { scripted: 0 }, 3.75);
   if (document.documentElement.classList.contains("loading")) window.addEventListener("site:ready", play, { once: true });
   else play();
 }

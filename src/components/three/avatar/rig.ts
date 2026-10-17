@@ -16,19 +16,13 @@ export function rotateWorld(bone: THREE.Object3D, axis: THREE.Vector3, angle: nu
   bone.updateMatrixWorld(true);
 }
 
-/**
- * An arm bone with its recorded rotations: resting at the side, halfway (elbow bent, forearm up in
- * front), arms crossed, and on the keyboard. Crossing goes rest -> halfway -> crossed so the forearms
- * come up and around instead of sliding through the body.
- */
+/** An arm bone with its recorded rotations: resting at the side, and on the keyboard. */
 export type ArmBone = {
   bone: THREE.Object3D;
   rest: THREE.Quaternion;
-  halfway: THREE.Quaternion;
-  crossed: THREE.Quaternion;
   typing: THREE.Quaternion;
   side: number;
-  kind: "arm" | "forearm" | "hand" | "finger";
+  kind: "arm" | "forearm" | "hand";
 };
 
 /** A leg bone standing and seated. */
@@ -37,7 +31,7 @@ export type LegBone = { bone: THREE.Object3D; stand: THREE.Quaternion; seated: T
 /** Where the chair, desk and laptop go, in the avatar's own space (floor at y = 0, facing +z). */
 export type Layout = { seatTop: number; deskTop: number; laptopZ: number; deskFront: number };
 
-/** A collarbone; it lifts in the stretch and rolls forward as the arms fold. */
+/** A collarbone; it lifts a little in the stretch at the end of the entrance. */
 export type ShoulderBone = { bone: THREE.Object3D; base: THREE.Quaternion; side: number };
 
 export type Rig = {
@@ -60,16 +54,9 @@ export type Rig = {
 
 const worldPos = (obj: THREE.Object3D) => obj.getWorldPosition(new THREE.Vector3());
 
-/** Signed angle that turns `from` onto `to` about `axis`, measured in the plane perpendicular to it. */
-function twistAngle(from: THREE.Vector3, to: THREE.Vector3, axis: THREE.Vector3) {
-  const a = from.clone().projectOnPlane(axis).normalize();
-  const b = to.clone().projectOnPlane(axis).normalize();
-  return Math.atan2(new THREE.Vector3().crossVectors(a, b).dot(axis), a.dot(b));
-}
-
 /**
- * Pose the T-posed avatar once and record the poses the page blends between: arms resting, crossed
- * (hero) or on the keyboard ("What I build"), legs standing or seated. Also measures where the
+ * Pose the T-posed avatar once and record the poses the page blends between: arms resting (hero) or
+ * on the keyboard ("What I build"), legs standing or seated. Also measures where the
  * furniture has to go. Leaves him standing with his arms at his sides.
  */
 export function rig(scene: THREE.Object3D): Rig {
@@ -104,100 +91,30 @@ export function rig(scene: THREE.Object3D): Rig {
     rotateWorld(forearm, X, -0.16);
   }
 
-  // each arm chain: upper arm, forearm, hand, the finger joints (index to pinky, base to tip), then
-  // the two outer thumb joints
-  const fingers = (s: string) =>
-    [
-      ...["Index", "Middle", "Ring", "Pinky"].flatMap((f) => [1, 2, 3].map((n) => bone(`${s}Hand${f}${n}`))),
-      bone(`${s}HandThumb2`),
-      bone(`${s}HandThumb3`),
-    ].filter((b): b is THREE.Object3D => !!b);
+  // relaxed hands: fingers gently curled, not straight out like the T-pose
+  for (const s of ["Left", "Right"]) {
+    const index = bone(`${s}HandIndex1`);
+    const pinky = bone(`${s}HandPinky1`);
+    if (!index || !pinky) continue;
+    const sd = side(index);
+    const across = worldPos(pinky).sub(worldPos(index)).normalize();
+    for (const f of ["Index", "Middle", "Ring", "Pinky"]) {
+      for (const n of [1, 2, 3]) {
+        const joint = bone(`${s}Hand${f}${n}`);
+        if (joint) rotateWorld(joint, across, sd * (n === 1 ? 0.18 : 0.28));
+      }
+    }
+  }
+
+  // each arm chain: upper arm, forearm, hand
   const chains = ["Left", "Right"]
     .map((s) => [bone(`${s}Arm`), bone(`${s}ForeArm`), bone(`${s}Hand`)])
-    .map((c, i) => (c.every(Boolean) ? [...(c as THREE.Object3D[]), ...fingers(i === 0 ? "Left" : "Right")] : null))
-    .filter((c): c is THREE.Object3D[] => c !== null);
+    .filter((c): c is THREE.Object3D[] => c.every(Boolean));
   const rest = chains.map((chain) => chain.map((b) => b.quaternion.clone()));
   const restore = () => {
     chains.forEach((chain, c) => chain.forEach((b, i) => b.quaternion.copy(rest[c][i])));
     scene.updateMatrixWorld(true);
   };
-
-  // halfway into crossing: upper arms forward, elbows bent so the forearms come up in front, fingers
-  // starting to close
-  const curl = (chain: THREE.Object3D[], amount: number, thumb: number) => {
-    const joints = chain.slice(3);
-    if (joints.length !== 14) return;
-    const sd = side(chain[0]);
-    const across = worldPos(joints[9]).sub(worldPos(joints[0])).normalize();
-    for (const joint of joints.slice(0, 12)) rotateWorld(joint, across, sd * amount);
-    for (const t of joints.slice(12)) rotateWorld(t, Z, sd * thumb);
-  };
-  const halfway = chains.map((chain) => {
-    const [arm, forearm] = chain;
-    const sd = side(arm);
-    rotateWorld(arm, X, -0.4);
-    rotateWorld(arm, Z, sd * 0.1);
-    rotateWorld(forearm, X, -1.3);
-    rotateWorld(forearm, Y, -sd * 0.55);
-    curl(chain, 0.35, 0.25);
-    return chain.map((b) => b.quaternion.clone());
-  });
-  restore();
-
-  // arms crossed, placed geometrically like a natural fold: upper arms hang almost straight with the
-  // elbows just in front of the body, forearms lie level across the lower chest (left in front of
-  // right), each hand ends at the opposite upper arm with the palm turned in and the fingers wrapped
-  const aim = (b: THREE.Object3D, child: THREE.Object3D, target: THREE.Vector3) => {
-    const from = worldPos(b);
-    const now = worldPos(child).sub(from).normalize();
-    const want = target.clone().sub(from).normalize();
-    const axis = new THREE.Vector3().crossVectors(now, want);
-    const length = axis.length();
-    if (length < 1e-6) return;
-    rotateWorld(b, axis.divideScalar(length), Math.acos(THREE.MathUtils.clamp(now.dot(want), -1, 1)));
-  };
-  const crossed = chains.map((chain) => {
-    const [arm, forearm, hand] = chain;
-    const sd = side(arm);
-    const front = sd > 0;
-    const shoulder = worldPos(arm);
-    const upper = worldPos(forearm).distanceTo(shoulder);
-    const lower = worldPos(hand).distanceTo(worldPos(forearm));
-    const lean = 0.42; // upper arm forward of vertical
-    const elbow = shoulder.clone().add(new THREE.Vector3(-sd * 0.02, -upper * Math.cos(lean), upper * Math.sin(lean)));
-    // forearms rise slightly toward the hands so the hands hold the upper arms, not the elbows
-    const lift = front ? 0.09 : 0.05;
-    const depth = front ? 0.14 : 0.105;
-    const reach = Math.sqrt(Math.max(0.01, lower * lower - lift * lift - depth * depth));
-    const wrist = elbow.clone().add(new THREE.Vector3(-sd * reach, lift, depth));
-    aim(arm, forearm, elbow);
-    aim(forearm, hand, wrist);
-
-    // aim the hand: fingers carry on across and wrap back around the opposite upper arm, palm
-    // facing the body. The forearm takes most of the turn about its own axis (as a real forearm
-    // does), the wrist the rest, so the wrist never looks wrung.
-    const index = bone(`${sd > 0 ? "Left" : "Right"}HandIndex1`);
-    const pinky = bone(`${sd > 0 ? "Left" : "Right"}HandPinky1`);
-    const middle = bone(`${sd > 0 ? "Left" : "Right"}HandMiddle1`);
-    if (index && pinky && middle) {
-      const fingerDir = () => worldPos(middle).sub(worldPos(hand)).normalize();
-      const palm = () => new THREE.Vector3().crossVectors(worldPos(index).sub(worldPos(pinky)), fingerDir()).multiplyScalar(-sd).normalize();
-      // the lower arm's hand slips back behind the other upper arm, as in a relaxed real fold
-      const wantFingers = new THREE.Vector3(-sd, front ? 0.45 : 0.2, front ? -0.45 : -0.8).normalize();
-      const wantPalm = new THREE.Vector3(-sd * 0.35, -0.1, -1).normalize();
-      const along = worldPos(hand).sub(worldPos(forearm)).normalize();
-      rotateWorld(forearm, along, twistAngle(palm(), wantPalm, along) * 0.75);
-      // wrist: point the fingers, then roll the palm into place
-      const f = fingerDir();
-      const bendAxis = new THREE.Vector3().crossVectors(f, wantFingers);
-      if (bendAxis.lengthSq() > 1e-8) rotateWorld(hand, bendAxis.normalize(), f.angleTo(wantFingers));
-      const roll = fingerDir();
-      rotateWorld(hand, roll, twistAngle(palm(), wantPalm, roll));
-    }
-    curl(chain, 0.75, 0.35);
-    return chain.map((b) => b.quaternion.clone());
-  });
-  restore();
 
   // sit: thighs forward, shins back down, knees a little apart, then sink until the feet are on the floor
   const legBones = ["Left", "Right"].flatMap((s) => [bone(`${s}UpLeg`), bone(`${s}Leg`)]).filter((b): b is THREE.Object3D => !!b);
@@ -252,8 +169,8 @@ export function rig(scene: THREE.Object3D): Rig {
   chains.forEach((chain, c) => {
     const sd = side(chain[0]);
     chain.forEach((b, i) => {
-      const kind = i === 0 ? "arm" : i === 1 ? "forearm" : i === 2 ? "hand" : "finger";
-      arms.push({ bone: b, rest: rest[c][i], halfway: halfway[c][i], crossed: crossed[c][i], typing: typing[c][i], side: sd, kind });
+      const kind = i === 0 ? "arm" : i === 1 ? "forearm" : "hand";
+      arms.push({ bone: b, rest: rest[c][i], typing: typing[c][i], side: sd, kind });
     });
   });
 
