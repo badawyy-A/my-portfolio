@@ -3,6 +3,7 @@ import { defineConfig, fontProviders } from "astro/config";
 
 export default defineConfig({
   site: "https://badawi.dev",
+  devToolbar: { enabled: false },
   fonts: [
     {
       name: "Schibsted Grotesk",
