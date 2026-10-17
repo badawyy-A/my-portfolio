@@ -1,0 +1,140 @@
+# Pages CMS: edit the site in the browser at https://app.pagescms.org (sign in with GitHub).
+# Saving commits to main, and every push to main redeploys badawi.dev.
+# Docs: https://pagescms.org/docs/configuration/
+
+content:
+  - name: projects
+    label: Projects
+    type: collection
+    path: src/content/projects
+    format: yaml-frontmatter
+    filename: "{primary}.md"
+    view:
+      fields: [title, order]
+      primary: title
+      sort: [order, title]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: summary
+        label: One-line summary
+        type: string
+        required: true
+      - name: order
+        label: Position on the home page (1 = first)
+        type: number
+        required: true
+      - name: scene
+        label: 3D scene
+        type: select
+        required: true
+        options:
+          values: [glasses, ekyc, document, rag, etl]
+      - name: stack
+        label: Short stack (card and page header)
+        type: string
+        list: true
+        required: true
+      - name: layers
+        label: Full stack, by layer
+        type: object
+        list: true
+        required: true
+        fields:
+          - name: name
+            label: Layer (Model, Backend, Database, Frontend, Deployment)
+            type: string
+            required: true
+          - name: items
+            label: Tools
+            type: string
+            list: true
+            required: true
+      - name: flow
+        label: How it works, steps in order
+        type: string
+        list: true
+        required: true
+      - name: repo
+        label: Code link (https://...)
+        type: string
+        required: true
+      - name: body
+        label: Problem, Features, How it works
+        type: rich-text
+        options:
+          format: markdown
+          media: false
+
+  - name: site
+    label: Site
+    type: file
+    path: src/content/site.yaml
+    format: yaml
+    fields:
+      - name: name
+        label: Name
+        type: string
+        required: true
+      - name: role
+        label: Role
+        type: string
+        required: true
+      - name: intro
+        label: Hero line
+        type: text
+        required: true
+      - name: phrases
+        label: Cycling "I build ..." phrases
+        type: string
+        list: true
+        required: true
+      - name: about
+        label: About
+        type: text
+        required: true
+      - name: services
+        label: What I build (exactly four)
+        type: object
+        list: true
+        fields:
+          - { name: title, label: Title, type: string, required: true }
+          - { name: text, label: Text, type: text, required: true }
+      - name: servicesClosing
+        label: Line under What I build
+        type: string
+        required: true
+      - name: process
+        label: How I deliver (exactly four steps)
+        type: object
+        list: true
+        fields:
+          - { name: title, label: Step, type: string, required: true }
+          - { name: text, label: Sentence, type: text, required: true }
+      - name: experience
+        label: Experience
+        type: object
+        list: true
+        fields:
+          - { name: role, label: Role, type: string, required: true }
+          - { name: org, label: Organisation, type: string, required: true }
+          - { name: start, label: Start year, type: string, required: true }
+          - { name: end, label: End year (or "now"), type: string, required: true }
+          - { name: text, label: One line (optional), type: string }
+      - name: contactLine
+        label: Contact headline
+        type: string
+        required: true
+      - name: links
+        label: Links
+        type: object
+        fields:
+          - { name: email, label: Email address, type: string, required: true }
+          - { name: whatsapp, label: WhatsApp link (https://wa.me/...), type: string, required: true }
+          - { name: github, label: GitHub profile URL, type: string, required: true }
+          - { name: linkedin, label: LinkedIn profile URL, type: string, required: true }
