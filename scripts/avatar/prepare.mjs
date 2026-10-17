@@ -2,7 +2,7 @@
 //
 // 1. FBX -> GLB with FBX2glTF (https://github.com/godotengine/FBX2glTF/releases):
 //      FBX2glTF -i model.fbx -o raw --binary --skinning-weights 4
-// 2. Clean it (this script): drop meshes the camera never sees, keep only the blink
+// 2. Clean it (this script): drop the teeth (mouth stays closed), keep only the blink
 //    blend shapes, make materials non-metallic so skin is not shiny:
 //      node scripts/avatar/prepare.mjs raw.glb clean.glb
 // 3. Compress, no simplify/join/flatten so the skeleton and face stay intact:
@@ -17,7 +17,7 @@ const io = new NodeIO();
 const doc = await io.read(input);
 const root = doc.getRoot();
 
-const DROP = new Set(["AvatarTeethLower", "AvatarTeethUpper", "outfit_bottom", "outfit_shoes"]);
+const DROP = new Set(["AvatarTeethLower", "AvatarTeethUpper"]);
 const KEEP_TARGETS = new Set(["eyeBlinkLeft", "eyeBlinkRight"]);
 
 for (const node of root.listNodes()) {
