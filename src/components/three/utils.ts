@@ -1,9 +1,14 @@
 import { useEffect, useState, type RefObject } from "react";
 
+/**
+ * True only for hardware-accelerated WebGL. When the browser would fall back to software
+ * rendering the 3D would stutter and block the page, so the static fallback is shown instead.
+ */
 export function hasWebGL() {
   try {
     const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
+    const options = { failIfMajorPerformanceCaveat: true };
+    return Boolean(canvas.getContext("webgl2", options) ?? canvas.getContext("webgl", options));
   } catch {
     return false;
   }
