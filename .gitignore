@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+.DS_Store
+
+# source avatar; only the compressed public/models/avatar.glb is committed
+model.fbx
+*.fbx
