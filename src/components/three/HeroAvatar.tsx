@@ -7,10 +7,9 @@ import { hasWebGL, prefersReducedMotion, useInView } from "./utils";
 import { X, Y, Z, rig, rotateWorld } from "./avatar/rig";
 import { buildFurniture, type Furniture } from "./avatar/furniture";
 import { crouchIntro, scrollSequence, scrollSequenceMobile, type View } from "./avatar/sequence";
+import { brandShirt } from "./avatar/shirt";
 
 const MODEL = "/models/avatar.glb";
-// the photo-based face has slightly lowered eyes; holding the head a touch higher makes him look at you
-const HEAD_LIFT = 0.1;
 type Mode = "desktop" | "mobile" | null;
 
 const bodyQuat = new THREE.Quaternion();
@@ -38,8 +37,14 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
   useLayoutEffect(() => {
     const { focusY } = avatar.current;
     const narrow = size.width / size.height < 0.9;
-    frame.current = { z: narrow ? 1.95 : 1.75, y: focusY - 0.02, look: focusY - (narrow ? 0.1 : 0.04) };
+    frame.current = { z: narrow ? 1.9 : 1.7, y: focusY - 0.02, look: focusY - (narrow ? 0.08 : 0.06) };
   }, [size]);
+
+  useEffect(() => {
+    if (scene.userData.branded) return;
+    scene.userData.branded = true;
+    brandShirt(scene);
+  }, [scene]);
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
@@ -104,7 +109,7 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
     const breath = reduce ? 0 : Math.sin(t * 1.4) * 0.012;
     aim(spine, yaw * 0.15, breath + v.typing * 0.12 + bend);
     aim(neck, yaw * 0.35, pitch * 0.35);
-    aim(head, yaw * 0.55, pitch * 0.6 + v.nod - HEAD_LIFT);
+    aim(head, yaw * 0.55, pitch * 0.6 + v.nod);
 
     // legs: standing or seated (sinking onto the chair)
     for (const leg of legs) leg.bone.quaternion.slerpQuaternions(leg.stand, leg.seated, v.sit);
