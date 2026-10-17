@@ -1,0 +1,9 @@
+---
+// Label that rolls up to an accent copy of itself when its link is hovered.
+interface Props {
+  text: string;
+}
+const { text } = Astro.props;
+---
+
+<span class="hover-link"><span class="hover-in">{text}<span aria-hidden="true">{text}</span></span></span>

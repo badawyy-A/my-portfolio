@@ -32,6 +32,8 @@
   --space-32: 8rem;
 
   /* layout */
+  --c-width: calc(100% - 30px);
+  --c-max: 1920px;
   --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
   --max-width: 80rem;
   --header-height: 4rem;
@@ -39,4 +41,10 @@
   /* motion */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --duration: 200ms;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --c-width: 94%;
+  }
 }
