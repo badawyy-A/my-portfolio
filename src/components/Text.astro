@@ -1,0 +1,12 @@
+---
+// Plain text, or a visible placeholder when the value is still a TODO.
+import Todo from "./Todo.astro";
+import { isTodo } from "../lib/content";
+
+interface Props {
+  value: string;
+}
+const { value } = Astro.props;
+---
+
+{isTodo(value) ? <Todo text={value} /> : value}

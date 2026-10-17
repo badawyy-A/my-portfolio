@@ -1,0 +1,26 @@
+---
+// Renders a "[TODO: ...]" placeholder so it is obvious on the page until Badawi fills it in.
+interface Props {
+  text: string;
+}
+const { text } = Astro.props;
+---
+
+<span class="todo">{text}</span>
+
+<style>
+  .todo {
+    display: inline-block;
+    padding: 0.1em 0.45em;
+    border: 1px dashed var(--muted);
+    border-radius: 2px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: max(0.6em, 0.75rem);
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.4;
+    text-transform: none;
+    vertical-align: middle;
+  }
+</style>
