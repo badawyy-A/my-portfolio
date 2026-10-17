@@ -26,6 +26,12 @@ The schema in `src/content.config.ts` fails the build with a clear error if a fi
 
 Every push to `main` runs `.github/workflows/deploy.yml` and publishes to GitHub Pages.
 
+## Credits
+
+The home page layout and interactions are adapted from
+[red1-for-hek/portfolio-website](https://github.com/red1-for-hek/portfolio-website) (MIT).
+See `THIRD_PARTY_NOTICES.md`.
+
 ## Avatar
 
 `public/models/avatar.glb` is generated from `model.fbx` (not committed). The steps are at the top of `scripts/avatar/prepare.mjs`.
