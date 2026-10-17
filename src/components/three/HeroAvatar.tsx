@@ -6,13 +6,15 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { hasWebGL, prefersReducedMotion, useInView } from "./utils";
 import { X, Y, rig, rotateWorld } from "./avatar/rig";
 import { buildFurniture, type Furniture } from "./avatar/furniture";
-import { riseIn, scrollSequence, scrollSequenceMobile, type View } from "./avatar/sequence";
+import { crouchIntro, scrollSequence, scrollSequenceMobile, type View } from "./avatar/sequence";
+import { brandShirt } from "./avatar/shirt";
 
 const MODEL = "/models/avatar.glb";
 type Mode = "desktop" | "mobile" | null;
 
 const bodyQuat = new THREE.Quaternion();
 const pitchAxis = new THREE.Vector3();
+const armQuat = new THREE.Quaternion();
 
 function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onReady: () => void }) {
   const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
@@ -28,14 +30,21 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
   const blink = useRef({ next: 2.5, start: -1 });
   const ready = useRef(false);
   const body = useRef<THREE.Group>(null);
-  const view = useRef<View>({ dz: 0, dy: 0, dlook: 0, typing: 0, screen: 0 });
+  // hero pose: standing, arms crossed (the desktop intro starts from a crouch instead)
+  const view = useRef<View>({ dz: 0, dy: 0, dlook: 0, crouch: 0, nod: 0, cross: 1, sit: 0, typing: 0, screen: 0, scripted: 0 });
   const frame = useRef({ z: 1.7, y: 1.2, look: 1.2 });
 
   useLayoutEffect(() => {
     const { focusY } = avatar.current;
     const narrow = size.width / size.height < 0.9;
-    frame.current = { z: narrow ? 1.9 : 1.7, y: focusY - 0.02, look: focusY - (narrow ? 0.08 : 0.06) };
+    frame.current = { z: narrow ? 2.05 : 1.85, y: focusY - 0.04, look: focusY - (narrow ? 0.12 : 0.12) };
   }, [size]);
+
+  useEffect(() => {
+    if (scene.userData.branded) return;
+    scene.userData.branded = true;
+    brandShirt(scene);
+  }, [scene]);
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
@@ -50,7 +59,7 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
   }, []);
 
   useFrame((state, delta) => {
-    const { head, neck, spine, base, blinkers, arms } = avatar.current;
+    const { head, neck, spine, base, blinkers, arms, legs, drop } = avatar.current;
     const t = state.clock.elapsedTime;
     const { z, y, look: lookAt } = frame.current;
     const v = view.current;
@@ -63,7 +72,10 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
     const idle = performance.now() - pointer.current.last > 4000;
     let gx = idle && !reduce ? Math.sin(t * 0.4) * 0.25 : pointer.current.x;
     let gy = idle && !reduce ? Math.sin(t * 0.27) * 0.08 : pointer.current.y;
-    if (mode === "desktop" && v.typing > 0.5) {
+    if (v.scripted) {
+      gx = 0;
+      gy = 0;
+    } else if (mode === "desktop" && v.typing > 0.5) {
       gx = 0;
       gy = 1.6;
     } else if (scrolled) {
@@ -88,12 +100,19 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
       rotateWorld(bone, pitchAxis, pitchAmount);
     };
     const breath = reduce ? 0 : Math.sin(t * 1.4) * 0.012;
-    aim(spine, yaw * 0.15, breath + v.typing * 0.12);
+    aim(spine, yaw * 0.15, breath + v.typing * 0.12 + v.crouch * 0.45);
     aim(neck, yaw * 0.35, pitch * 0.35);
-    aim(head, yaw * 0.55, pitch * 0.6);
+    aim(head, yaw * 0.55, pitch * 0.6 + v.nod);
 
-    // arms: resting at the sides, or on the keyboard, blended by the scroll position
-    for (const arm of arms) arm.bone.quaternion.slerpQuaternions(arm.rest, arm.typing, v.typing);
+    // legs: standing or seated (sinking onto the chair)
+    for (const leg of legs) leg.bone.quaternion.slerpQuaternions(leg.stand, leg.seated, v.sit);
+    scene.position.y = -drop * v.sit;
+
+    // arms: resting, crossed, or on the keyboard
+    for (const arm of arms) {
+      armQuat.slerpQuaternions(arm.rest, arm.crossed, v.cross);
+      arm.bone.quaternion.slerpQuaternions(armQuat, arm.typing, v.typing);
+    }
     if (v.typing > 0.85 && !reduce) {
       for (const arm of arms) {
         arm.bone.updateMatrixWorld(true);
@@ -129,8 +148,8 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
       furniture.desk.visible = mode === "desktop";
       furniture.desk.position.y = -1.6;
       if (mode === "desktop" && body.current) {
-        riseIn(body.current);
-        scrollSequence(body.current, v, furniture);
+        crouchIntro(body.current, v);
+        scrollSequence(body.current, v, furniture, drop);
       }
       if (mode === "mobile" && body.current) scrollSequenceMobile(body.current, v);
       onReady();
