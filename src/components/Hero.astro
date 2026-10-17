@@ -17,6 +17,10 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
 <section class="hero" aria-labelledby="hero-title" data-hero>
   <div class="stage" aria-hidden="true">
     <div class="glow"></div>
+    <picture class="poster">
+      <source media="(max-width: 48rem)" srcset="/images/avatar-narrow.webp" width="780" height="1080" />
+      <img src="/images/avatar-wide.webp" alt="" width="998" height="1250" fetchpriority="high" />
+    </picture>
     <slot name="avatar" />
     <div class="fade"></div>
   </div>
@@ -88,6 +92,33 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
     aspect-ratio: 1;
     translate: -50% -50%;
     background: radial-gradient(closest-side, rgb(107 20 39 / 0.55), rgb(107 20 39 / 0.18) 55%, transparent);
+  }
+
+  /* static render of the avatar: shown while the 3D loads, and when WebGL is off */
+  .poster img {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: auto;
+    height: 100%;
+    max-width: none;
+    translate: -50% 0;
+    transition: opacity 900ms var(--ease-out);
+  }
+
+  :global([data-avatar="ready"]) .poster img {
+    opacity: 0;
+  }
+
+  .stage :global(.avatar-canvas) {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 900ms var(--ease-out);
+  }
+
+  .stage :global(.avatar-canvas.is-ready) {
+    opacity: 1;
   }
 
   .fade {
@@ -192,8 +223,13 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
       padding-top: 46svh;
     }
 
+    .stage {
+      bottom: auto;
+      height: 64svh;
+    }
+
     .glow {
-      top: 30%;
+      top: 45%;
     }
 
     .name {
