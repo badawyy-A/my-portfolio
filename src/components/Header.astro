@@ -1,92 +1,146 @@
 ---
+import HoverText from "./HoverText.astro";
+import { getSite } from "../lib/content";
+
+const site = await getSite();
 // on the home page the links stay in-page so smooth scrolling handles them
 const base = Astro.url.pathname === "/" ? "" : "/";
 const links = [
-  { href: `${base}#work`, label: "Work" },
   { href: `${base}#about`, label: "About" },
   { href: `${base}#experience`, label: "Experience" },
+  { href: `${base}#work`, label: "Work" },
   { href: `${base}#contact`, label: "Contact" },
 ];
 ---
 
-<header class="site-header">
-  <div class="container inner">
-    <a class="wordmark" href="/">badawi.dev</a>
-    <nav aria-label="Main">
-      <ul>
-        {links.map((link) => (
-          <li>
-            <a class="mono" href={link.href}>{link.label}</a>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  </div>
+<header class="header" data-intro="fade">
+  <a class="wordmark" href="/">badawi.dev</a>
+  <a class="connect" href={`mailto:${site.links.email}`}>{site.links.email}</a>
+  <nav aria-label="Main">
+    <ul>
+      {links.map((link) => (
+        <li>
+          <a class="mono" href={link.href}>
+            <HoverText text={link.label} />
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
 </header>
+<div class="nav-fade" aria-hidden="true" data-intro="fade"></div>
 
 <style>
-  .site-header {
-    position: absolute;
-    inset: 0 0 auto;
-    z-index: 10;
-  }
-
-  .inner {
+  .header {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    z-index: 50;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: var(--space-4);
-    min-height: var(--header-height);
+    align-items: flex-start;
+    width: var(--c-width);
+    max-width: var(--c-max);
+    padding-block: 15px;
+    translate: -50% 0;
   }
 
-  .wordmark {
+  a {
     color: var(--fg);
-    font-weight: 800;
-    font-size: var(--text-base);
-    letter-spacing: -0.02em;
     text-decoration: none;
   }
 
-  nav {
-    min-width: 0;
+  .wordmark {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .connect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: none;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    translate: -50% -50%;
+  }
+
+  .connect:hover {
+    color: var(--accent);
   }
 
   ul {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: var(--space-1) var(--space-6);
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px 20px;
     padding: 0;
     list-style: none;
   }
 
-  nav a {
+  ul a {
     color: var(--muted);
-    text-decoration: none;
-    transition: color var(--duration) var(--ease-out);
+    font-size: 11px;
   }
 
-  nav a:hover {
-    color: var(--fg);
+  .nav-fade {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    width: 100%;
+    height: 130px;
+    background-image: linear-gradient(0deg, transparent, var(--bg) 70%);
+    pointer-events: none;
   }
 
-  @media (max-width: 30rem) {
-    ul {
-      gap: var(--space-1) var(--space-3);
-    }
-  }
-
-  @media (max-width: 24rem) {
-    .inner {
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      gap: var(--space-1);
-      padding-block: var(--space-3);
+  @media (min-width: 500px) {
+    .header {
+      padding-block: 20px;
     }
 
     ul {
-      justify-content: flex-start;
+      flex-direction: row;
+      align-items: center;
+    }
+
+    ul a {
+      color: var(--fg);
+      font-size: 12px;
+    }
+
+    .wordmark {
+      font-size: 16px;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .connect {
+      display: block;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .header {
+      padding-block: 35px;
+    }
+
+    ul {
+      column-gap: 56px;
+    }
+
+    ul a {
+      font-size: 13px;
+    }
+
+    .connect {
+      font-size: 16px;
+    }
+
+    .wordmark {
+      font-size: 18px;
     }
   }
 </style>
