@@ -1,5 +1,4 @@
 ---
-import SectionHead from "./SectionHead.astro";
 import Text from "./Text.astro";
 
 interface Props {
@@ -8,17 +7,97 @@ interface Props {
 const { about } = Astro.props;
 ---
 
-<section id="about" class="section container" aria-labelledby="about-title">
-  <SectionHead id="about" label="About" />
-  <p class="lead" data-reveal><Text value={about} /></p>
+<section class="about-section" id="about" aria-labelledby="about-title">
+  <div class="about-me">
+    <h2 id="about-title" class="title">About me</h2>
+    <p class="para"><Text value={about} /></p>
+  </div>
 </section>
 
 <style>
-  .lead {
-    max-width: 32ch;
-    font-size: var(--text-xl);
+  .about-section {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    width: var(--c-width);
+    margin: auto;
+  }
+
+  .about-me {
+    width: 100%;
+    max-width: calc(100% - 15px);
+    padding-top: 40px;
+  }
+
+  h2 {
+    margin-bottom: 15px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 18px;
     font-weight: 500;
-    line-height: 1.35;
-    letter-spacing: -0.015em;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  p {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    word-spacing: 0.08em;
+  }
+
+  @media (min-width: 600px) {
+    .about-section {
+      justify-content: center;
+    }
+
+    .about-me {
+      width: 500px;
+    }
+
+    h2 {
+      font-size: 20px;
+    }
+
+    p {
+      font-size: 28px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .about-me {
+      max-width: calc(100% - 70px);
+    }
+
+    p {
+      font-size: 33px;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .about-section {
+      justify-content: flex-end;
+      max-width: var(--c-max);
+      height: 100vh;
+    }
+
+    .about-me {
+      width: 50%;
+      padding: 0;
+    }
+
+    p {
+      font-size: 1.9vw;
+      line-height: 2.3vw;
+    }
+  }
+
+  @media (min-width: 1950px) {
+    p {
+      font-size: 2.5rem;
+      line-height: 2.7rem;
+    }
   }
 </style>
