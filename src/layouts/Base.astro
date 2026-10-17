@@ -2,16 +2,20 @@
 import { Font } from "astro:assets";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import Chrome from "../components/Chrome.astro";
 import "../styles/global.css";
 
 interface Props {
   title?: string;
   description?: string;
+  /** the home page: full 3D scroll sequence when the device can take it, no separate footer */
+  home?: boolean;
 }
 
 const {
   title = "Badawi, AI and full-stack engineer",
   description = "Badawi builds complete software with AI inside it: the model, the backend, the frontend and the deploy. Based in Cairo.",
+  home = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -33,15 +37,37 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:url" content={canonical} />
     <Font cssVariable="--font-sans" preload />
     <Font cssVariable="--font-mono" />
+    <script is:inline define:vars={{ home }}>
+      // "js": scripts run, so reveal effects may start hidden.
+      // "choreo": large screen, motion allowed, hardware WebGL -> fixed avatar, scroll sequence, loading screen.
+      (function () {
+        var root = document.documentElement;
+        root.classList.add("js");
+        if (!home || window.innerWidth <= 1024) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        try {
+          var canvas = document.createElement("canvas");
+          var options = { failIfMajorPerformanceCaveat: true };
+          var gl = canvas.getContext("webgl2", options) || canvas.getContext("webgl", options);
+          if (!gl) return;
+          var lose = gl.getExtension("WEBGL_lose_context");
+          if (lose) lose.loseContext();
+          root.classList.add("choreo", "loading");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <a class="skip-link mono" href="#main">Skip to content</a>
+    <slot name="before" />
     <Header />
+    <Chrome caption={home} />
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    {!home && <Footer />}
     <script>
+      import "../scripts/chrome";
       import "../scripts/motion";
     </script>
   </body>

@@ -1,0 +1,212 @@
+---
+// Fixed page furniture: edge glows, custom cursor, social column (left), corner caption (right).
+import Icon from "./Icon.astro";
+import { getSite } from "../lib/content";
+
+interface Props {
+  caption?: boolean;
+}
+const { caption = false } = Astro.props;
+const { links } = await getSite();
+const social = [
+  { label: "GitHub", href: links.github, icon: "github" as const },
+  { label: "LinkedIn", href: links.linkedin, icon: "linkedin" as const },
+  { label: "WhatsApp", href: links.whatsapp, icon: "whatsapp" as const },
+  { label: "Email", href: `mailto:${links.email}`, icon: "email" as const },
+];
+---
+
+<div class="glow glow-1" aria-hidden="true"></div>
+<div class="glow glow-2" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<div class="icons-section" data-intro="fade">
+  <ul class="social" data-cursor="icons">
+    {social.map((item) => (
+      <li>
+        <a href={item.href} aria-label={item.label} rel={item.icon === "email" ? undefined : "me noopener"}>
+          <Icon name={item.icon} size={22} />
+        </a>
+      </li>
+    ))}
+  </ul>
+  {caption && <p class="mono caption" aria-hidden="true">Move your mouse</p>}
+</div>
+
+<style>
+  .glow {
+    position: fixed;
+    z-index: 30;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background-color: #d9455f;
+    box-shadow: inset -50px 40px 50px rgb(107 20 39 / 0.75);
+    pointer-events: none;
+  }
+
+  .glow-1 {
+    top: 0;
+    left: 0;
+    filter: blur(60px);
+    animation: glow-1 5s linear infinite;
+  }
+
+  .glow-2 {
+    top: 50%;
+    right: 0;
+    display: none;
+    filter: blur(50px);
+    animation: glow-2 5s linear infinite;
+  }
+
+  @keyframes glow-1 {
+    from {
+      transform: translate(-95%, -75%) rotate(0deg);
+    }
+    to {
+      transform: translate(-95%, -75%) rotate(360deg);
+    }
+  }
+
+  @keyframes glow-2 {
+    from {
+      transform: translate(calc(100% - 2px), -50%) rotate(0deg);
+    }
+    to {
+      transform: translate(calc(100% - 2px), -50%) rotate(360deg);
+    }
+  }
+
+  .cursor {
+    --size: 0px;
+    position: fixed;
+    top: calc(var(--size) / -2);
+    left: calc(var(--size) / -2);
+    z-index: 60;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50px;
+    background-color: #f08ea0;
+    box-shadow: 0 0 30px 0 rgb(217 69 95 / 0.9);
+    mix-blend-mode: difference;
+    pointer-events: none;
+    transition:
+      top 0.3s ease-out,
+      left 0.3s ease-out,
+      width 0.3s ease-out,
+      height 0.3s ease-out;
+  }
+
+  .cursor:global(.cursor-icons) {
+    top: 6px;
+    left: 6px;
+    height: calc(var(--cursor-h) - 12px);
+    transition:
+      all 0.5s ease-out,
+      height 0.5s ease-in-out;
+  }
+
+  .cursor:global(.cursor-disable) {
+    --size: 0px !important;
+  }
+
+  .icons-section {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    z-index: 45;
+    width: var(--c-width);
+    max-width: var(--c-max);
+    translate: -50% 0;
+  }
+
+  .social {
+    position: absolute;
+    bottom: 20px;
+    left: -20px;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+    padding: 10px;
+    list-style: none;
+  }
+
+  .social li {
+    position: relative;
+    display: flex;
+    width: 46px;
+    height: 46px;
+  }
+
+  .social a {
+    --si-left: 50%;
+    --si-top: 50%;
+    position: absolute;
+    top: var(--si-top);
+    left: var(--si-left);
+    display: flex;
+    color: var(--fg);
+    translate: -50% -50%;
+  }
+
+  .social a:hover {
+    color: var(--bg);
+  }
+
+  .caption {
+    position: absolute;
+    right: 0;
+    bottom: 40px;
+    display: none;
+    color: var(--muted);
+    letter-spacing: 0.3em;
+    transition: opacity 400ms var(--ease-out);
+  }
+
+  :global(html.choreo) .caption {
+    display: block;
+  }
+
+  :global(html.scrolled) .caption {
+    opacity: 0;
+  }
+
+  @media (min-width: 500px) {
+    .glow-2 {
+      display: block;
+    }
+  }
+
+  @media (min-width: 600px) {
+    .cursor {
+      --size: 50px;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .social {
+      display: flex;
+    }
+  }
+
+  @media (hover: none), (prefers-reduced-motion: reduce) {
+    .cursor {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glow {
+      animation: none;
+    }
+
+    .glow-1 {
+      transform: translate(-95%, -75%);
+    }
+
+    .glow-2 {
+      transform: translate(calc(100% - 2px), -50%);
+    }
+  }
+</style>
