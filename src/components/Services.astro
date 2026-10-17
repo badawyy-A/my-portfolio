@@ -1,0 +1,67 @@
+---
+import SectionHead from "./SectionHead.astro";
+
+interface Props {
+  services: { title: string; text: string }[];
+  closing: string;
+}
+const { services, closing } = Astro.props;
+---
+
+<section id="services" class="section container" aria-labelledby="services-title">
+  <SectionHead id="services" label="What I build" title="From idea to running software, with AI inside it." />
+  <ul class="grid">
+    {services.map((service, i) => (
+      <li data-reveal>
+        <p class="mono index">{String(i + 1).padStart(2, "0")}</p>
+        <h3>{service.title}</h3>
+        <p class="text">{service.text}</p>
+      </li>
+    ))}
+  </ul>
+  <p class="closing" data-reveal>{closing}</p>
+</section>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-12) var(--space-8);
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+  }
+
+  .index {
+    color: var(--muted);
+  }
+
+  h3 {
+    margin-top: var(--space-4);
+    font-size: var(--text-xl);
+  }
+
+  .text {
+    margin-top: var(--space-3);
+    max-width: 38ch;
+    color: var(--muted);
+  }
+
+  .closing {
+    margin-top: clamp(3rem, 2rem + 4vw, 6rem);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  @media (max-width: 40rem) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+  }
+</style>

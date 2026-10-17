@@ -1,0 +1,24 @@
+---
+import SectionHead from "./SectionHead.astro";
+import Text from "./Text.astro";
+
+interface Props {
+  about: string;
+}
+const { about } = Astro.props;
+---
+
+<section id="about" class="section container" aria-labelledby="about-title">
+  <SectionHead id="about" label="About" />
+  <p class="lead" data-reveal><Text value={about} /></p>
+</section>
+
+<style>
+  .lead {
+    max-width: 32ch;
+    font-size: var(--text-xl);
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+  }
+</style>
