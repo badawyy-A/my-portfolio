@@ -1,0 +1,175 @@
+# badawi.dev portfolio
+
+Personal portfolio for Badawi, an AI and full-stack engineer in Cairo who delivers complete software solutions: the AI model, the backend, the frontend, and the deployment. Strengths: computer vision, OCR, LLM systems, data engineering, FastAPI/PostgreSQL backends, React frontends. It is aimed at recruiters and at freelance clients. English only.
+
+Positioning on every page: one engineer who can take a product from idea to running software, with AI inside it. Not "an ML person who also does some web".
+
+## Rules that override everything else
+
+- Nothing may look AI-generated. No emoji, no badge walls, no marketing tables, no gradient washes, no glowing template cards, no AI chat bot, no "passionate developer" copy. Plain, specific, human writing.
+- No status labels on projects ("in progress", "live", "building"). Every project card looks the same.
+- Project pages show the project only: problem, features, how it works, stack. No demo section, no results/metrics section, no team section.
+- Never use company code, data, or client names from Badawi's job. Projects are his own builds.
+- Ask Badawi before inventing any personal fact (dates, links, wording about himself). Use a clear `[TODO: ...]` placeholder until he answers.
+
+## Git
+
+- Commit often, one small logical change per commit.
+- Commit message: ONE short line, lowercase, imperative, no body, no trailers, no co-author lines, no emoji. Examples: `add hero avatar scene`, `fix mobile nav wrap`, `add ekyc project page`.
+- Push to `main`. Every push to `main` deploys the site.
+
+## Stack
+
+- Astro (static output) + TypeScript
+- React islands only where interactive (3D scenes)
+- three.js + @react-three/fiber + @react-three/drei for 3D; GSAP + Lenis for scroll motion (keep it restrained)
+- Plain CSS with design tokens as CSS variables. No Tailwind, no UI kits.
+- Content in Astro content collections (Markdown + zod schema), so the build fails with a clear error on a missing field
+- Pages CMS for browser editing (`.pages.yml` at repo root), no database
+- GitHub Actions → GitHub Pages, custom domain `badawi.dev`
+
+## Repo layout
+
+```
+src/
+  content/projects/*.md     one file per project (frontmatter + case study body)
+  content/site.yaml         name, intro, about, experience, links
+  components/               Astro components + React 3D islands
+  pages/index.astro         home
+  pages/work/[slug].astro   project page
+public/
+  models/                   compressed avatar .glb
+  CNAME                     contains: badawi.dev
+.pages.yml                  Pages CMS config (collections: projects, site)
+.github/workflows/deploy.yml
+```
+
+## Design
+
+Theme: black and burgundy, one committed dark look (no light mode).
+
+```css
+--bg: #0A0708;        /* page background, warm black */
+--surface: #140C0E;   /* raised areas */
+--line: #2A1A1D;      /* hairlines */
+--deep: #6B1427;      /* deep burgundy: glows, rim light, fills */
+--accent: #D9455F;    /* readable burgundy-rose: links, highlights, buttons */
+--fg: #EDE6E3;        /* text */
+--muted: #9A8F8C;     /* secondary text */
+```
+
+Type: Schibsted Grotesk (display 800–900, tight negative tracking; body 400–500) + JetBrains Mono (small labels, stack lists, captions). Google Fonts.
+
+Feel: cinematic and confident like moncy.dev (big type, one strong 3D moment, smooth scroll), but it must not look like a moncy clone: no lavender, no Geist, no 3D tech-stack balls, no character typing at a laptop.
+
+Accessibility: text contrast 4.5:1, visible focus states, real links/buttons, `prefers-reduced-motion` turns off idle animation and scroll effects, site works and reads fully with WebGL off.
+
+## Home page, top to bottom
+
+1. Header: `badawi.dev` wordmark left; Work, About, Experience, Contact right (mono, uppercase, small).
+2. Hero: avatar 3D scene centered behind a split headline. Left: "Hello, I'm" (mono, accent) + huge "BADAWI". Right: "AI & full-stack engineer" label, "I build" + a phrase that cycles: AI products / full-stack apps / computer vision / LLM systems / data pipelines. Short line: "Complete software, from the model to the interface to the deploy. Based in Cairo, building at Fixed Solutions." Bottom: caption "Move your mouse." + social links. Soft deep-burgundy radial glow behind the avatar, fade to background at the bottom.
+3. About: [TODO: Badawi's own 2–3 sentences].
+4. What I build (short paragraph each):
+   - AI features: vision, OCR, LLM and RAG features that work on real data.
+   - Full-stack apps: FastAPI and PostgreSQL backends, React frontends, admin dashboards, auth, APIs.
+   - Data pipelines: moving, cleaning and modeling data, from messy sources to tables you can trust.
+   - Deployment: Docker, CI/CD with GitHub Actions, running and monitoring in production.
+   Closing line under the four: "I can deliver the whole thing, or the part you need."
+5. How I deliver: a real four-step process, shown in order: Plan (scope, architecture, timeline) → Build (model, backend, frontend, in small working releases) → Ship (deploy, test with real users) → Support (fixes, monitoring, improvements). One short sentence per step.
+6. Work: the five projects, each with its own small 3D scene, title, one-liner, stack, link to its page.
+7. Experience: timeline. AI Engineer, Fixed Solutions ([TODO: start year] – now). Freelance full-stack and AI engineer ([TODO] – now): complete software for clients. B.Sc. Computer Science, Faculty of Computers and Information ([TODO: years]).
+8. Contact: big line "Have a product in mind? Let's build it." + email (shown as selectable text), WhatsApp, GitHub, LinkedIn. [TODO: all links]
+9. Footer: © year Badawi · Cairo, Egypt.
+
+## Project page template
+
+Header line (stack), title, one-line summary, the project's 3D scene large, then sections: Problem · Features · How it works (with a simple diagram) · Stack · links to code. Nothing else. In "How it works" and "Stack", show the full stack of each project (model, backend, database, frontend, deployment) so every project reads as complete software, not only a model.
+
+## Hero avatar
+
+Source: `model.fbx` from Badawi (MetaPerson avatar, ~51k triangles, 101 bones, textures embedded, no animations, T-pose, faces +Z, ~1.8 m tall).
+
+Pipeline (do once, commit the output, not the FBX):
+1. Convert FBX → GLB with textures (e.g. Blender CLI import/export, or FBX2glTF).
+2. Compress with gltf-transform: meshopt or draco geometry, WebP/KTX2 textures at 1K max, drop unused maps. Target under 3 MB.
+3. Save as `public/models/avatar.glb`. Lazy-load the scene after the hero text paints; show a static fallback while loading and if WebGL is unavailable.
+
+Behaviour (see `avatar-reference.js`, it already works in the preview):
+- Arms down from T-pose: rotate `LeftArm`/`RightArm` about world Z by ∓1.22 rad (sign by side) and +0.08 rad about world X; forearms ±0.12 rad about world Y.
+- Head follows the pointer: rotate on top of the bind pose each frame, `Head` yaw 0.55 / pitch 0.6, `Neck` 0.35 / 0.35, `Spine2` yaw 0.15 of the smoothed target (target yaw = x·0.7, pitch = y·0.35, easing 0.07). Mouse right turns the face right; mouse below tilts it down.
+- Idle after 4 s without pointer movement: slow look-around (sin waves), tiny breathing on the spine.
+- Camera: fov 26, at head height, z ≈ 1.55 (1.9 on narrow screens), framing chest up.
+- Lights: warm hemisphere + key from top-left + soft fill, two `#D9455F` rim lights from behind. ACES tone mapping, sRGB output, low specular so skin is not shiny.
+
+## Project 3D scenes (all procedural in three.js, no model files)
+
+Same palette, small, subtle pointer reaction, pause when off screen, static frame under reduced motion.
+
+1. Smart glasses: glasses frame with two small camera lenses, each projecting a faint depth cone, points appearing where the cones hit.
+2. eKYC: ID card plane beside a face made of landmark points, a scan line passing across both, a match line joining them.
+3. Arabic document reader: a page whose layout blocks (title, paragraphs, stamp) lift off in layers; the stamp fades away.
+4. Arabic RAG assistant: floating article cards; a few light up and drift toward a question at the center.
+5. ETL pipeline: three stacked translucent layers (L1, L2, L3), particles falling through and getting more ordered at each layer, then grouping into segment clusters below.
+
+## Projects (content for src/content/projects)
+
+### 1. Smart glasses
+AI software for smart glasses: a memory aid and a vision assistant for blind users.
+- Problem: people forget where they put things and what happened during their day; blind users need to know what is around them and how far away it is.
+- Features: memory aid (records all day, detects objects, summarizes scenes, answers "where did I leave my keys?"); vision assistant (describes surroundings out loud); stereo vision (depth from the two cameras, distance to each detected object, obstacle warnings in the walking path, object positions saved with depth).
+- How it works: two cameras calibrated and rectified, disparity map gives depth, object detection on top gives each object a distance and direction; detections, depth and scene summaries go into a vector database; an LLM answers questions from it; a Flutter app connects the user to the glasses.
+- Stack: Python, OpenCV (stereo calibration, rectification, disparity), object detection, vision-language models, vector DB, LLM APIs, Flutter.
+
+### 2. eKYC system
+Verify someone's identity from a national ID card and a selfie.
+- Problem: banks, fintechs and telecoms need to verify identity remotely and catch fake IDs and spoofed faces.
+- Features: ID card detection, cropping, perspective correction, blur and glare checks; Arabic and English OCR for name, address, ID number, birth date; ID number validation (format and checksum, cross-checked against extracted fields); face extraction from the card with background removal; liveness check with spoof detection for photos, screens and masks; selfie-to-ID face matching; admin dashboard to approve, reject or review.
+- How it works: ID capture → data extraction → photo cleanup → liveness → face match → decision.
+- Stack: OpenCV, YOLO, OCR, InsightFace, MediaPipe, SVM, PyTorch, ONNX, FastAPI, PostgreSQL, React.
+
+### 3. Arabic document reader
+Turn scanned Arabic documents into clean, editable text.
+- Problem: OCR tools struggle with Arabic; stamps, mixed scripts and noisy scans produce garbage text.
+- Features: layout detection (titles, paragraphs, tables, stamps, signatures); stamp and seal removal; script-aware cleaning of junk lines and footers; Arabic spell correction for OCR errors; export to Word or text.
+- How it works: preprocess → layout detection → OCR → cleaning → spell correction → export.
+- Stack: PaddleOCR, DocLayout-YOLO, OpenCV, FastAPI, React.
+
+### 4. Arabic RAG assistant
+Ask questions about Egyptian law and get answers that cite the exact article.
+- Problem: legal texts are long, and searching them in Arabic is painful.
+- Features: chat in Arabic or English; answers cite the law and article number; says "not found" instead of guessing.
+- How it works: laws split by article and embedded; relevant articles retrieved per question; the LLM answers from them only.
+- Stack: llama-index, Hugging Face embeddings, FastAPI, React.
+
+### 5. MongoDB to PostgreSQL ETL pipeline
+Move data from MongoDB into PostgreSQL through three layers, segment customers, and show it on a dashboard.
+- Problem: operational data in MongoDB is nested and inconsistent, hard to report on; it needs to become clean, structured, analytics-ready data.
+- L1 Raw: full load first, then incremental via timestamps or change streams; stored as JSONB with load metadata (batch ID, load time, source collection); untouched, so any layer can be rebuilt.
+- L2 Cleaned: nested documents flattened, arrays split into child tables; type casting, deduplication, null handling; validation rules with bad records sent to quarantine; standardization and schema drift handling; upserts so reruns are safe.
+- L3 Business: star schema (fact and dimension tables); SCD Type 2 history on dimensions; enrichment, derived columns, daily/weekly/monthly aggregates.
+- Segmentation (runs after L3): features from L3 (RFM, average order value, categories, activity trend); K-Means assigns each customer a segment; scheduled retraining with model versioning; segments, segment history and aggregates written back to PostgreSQL; alert if segment sizes shift suddenly.
+- Orchestration: one Airflow DAG (L1 → L2 → L3 → Segmentation) with retries, failure alerts, a run log, quality checks at each stage.
+- Dashboard: KPIs and trends, filters, segment sizes and profiles, segment movement, pipeline health page.
+- How it works: MongoDB → L1 → L2 → L3 → Segmentation → Dashboard.
+- Stack: Python, PySpark or pandas, MongoDB, PostgreSQL, Airflow, SQLAlchemy, scikit-learn, FastAPI, React, Recharts.
+
+## Pages CMS
+
+`.pages.yml` with two content types: `projects` (folder `src/content/projects`, fields: title, summary, order, stack list, repo url, body) and `site` (file `src/content/site.yaml`: name, intro, about, experience list, links). Badawi edits at app.pagescms.org with his GitHub login; saving commits to `main` and redeploys. Add `/admin` as a redirect to app.pagescms.org.
+
+## Deploy
+
+- `.github/workflows/deploy.yml`: on push to `main`, build with the official Astro action, deploy with `actions/deploy-pages`.
+- `public/CNAME` = `badawi.dev`. Repo Settings → Pages → Source: GitHub Actions, custom domain `badawi.dev`, Enforce HTTPS (required for .dev).
+- DNS at the registrar (Badawi does this): A records for `badawi.dev` → 185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153; CNAME `www` → `<github-username>.github.io`. Verify the domain in GitHub account settings.
+
+## Build order
+
+1. Scaffold Astro + tokens + fonts + layout, deploy workflow, CNAME. Deploy a bare page to confirm badawi.dev works.
+2. Content collections + schema + the five project files + site.yaml (with TODOs).
+3. Home page sections without 3D.
+4. Avatar: convert, compress, hero scene.
+5. Project page template.
+6. The five project scenes.
+7. Pages CMS config + /admin redirect.
+8. Pass for mobile, reduced motion, WebGL-off fallback, Lighthouse.
