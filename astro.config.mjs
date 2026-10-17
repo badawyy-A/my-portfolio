@@ -6,6 +6,8 @@ export default defineConfig({
   site: "https://badawi.dev",
   devToolbar: { enabled: false },
   integrations: [react()],
+  // browser editing lives at Pages CMS (config in .pages.yml)
+  redirects: { "/admin": "https://app.pagescms.org" },
   fonts: [
     {
       name: "Schibsted Grotesk",
