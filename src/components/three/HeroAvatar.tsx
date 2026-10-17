@@ -48,7 +48,7 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
   useLayoutEffect(() => {
     const { focusY } = avatar.current;
     const narrow = size.width / size.height < 0.9;
-    frame.current = { z: narrow ? 2.05 : 1.85, y: focusY - 0.04, look: focusY - (narrow ? 0.12 : 0.12) };
+    frame.current = { z: narrow ? 2.1 : 1.95, y: focusY - 0.06, look: focusY - (narrow ? 0.2 : 0.15) };
   }, [size]);
 
   useEffect(() => {
