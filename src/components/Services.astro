@@ -1,67 +1,454 @@
 ---
-import SectionHead from "./SectionHead.astro";
-
 interface Props {
-  services: { title: string; text: string }[];
+  services: { title: string; text: string; tools: string[] }[];
   closing: string;
 }
 const { services, closing } = Astro.props;
 ---
 
-<section id="services" class="section container" aria-labelledby="services-title">
-  <SectionHead id="services" label="What I build" title="From idea to running software, with AI inside it." />
-  <ul class="grid">
-    {services.map((service, i) => (
-      <li data-reveal>
-        <p class="mono index">{String(i + 1).padStart(2, "0")}</p>
-        <h3>{service.title}</h3>
-        <p class="text">{service.text}</p>
-      </li>
-    ))}
-  </ul>
-  <p class="closing" data-reveal>{closing}</p>
+<section class="whatIDO" id="services" aria-labelledby="what-title">
+  <div class="what-box">
+    <div class="what-head">
+      <h2 id="what-title" class="title">
+        W<span class="hat">HAT</span><span class="what-row">&nbsp;I<span class="accent"> BUILD</span></span>
+      </h2>
+      <p class="closing">{closing}</p>
+    </div>
+  </div>
+
+  <div class="what-box">
+    <div class="what-box-in" data-frames>
+      <div class="what-border2" aria-hidden="true">
+        <svg width="100%" height="100%">
+          <line x1="0" y1="0" x2="0" y2="100%" stroke="currentColor" stroke-width="2" stroke-dasharray="7,7"></line>
+          <line x1="100%" y1="0" x2="100%" y2="100%" stroke="currentColor" stroke-width="2" stroke-dasharray="7,7"></line>
+        </svg>
+      </div>
+      {services.map((service, i) => (
+        <div class="what-content" tabindex="0">
+          <div class="what-border1" aria-hidden="true">
+            <svg width="100%" height="100%">
+              {i === 0 && <line x1="0" y1="0" x2="100%" y2="0" stroke="currentColor" stroke-width="2" stroke-dasharray="6,6" />}
+              <line x1="0" y1="100%" x2="100%" y2="100%" stroke="currentColor" stroke-width="2" stroke-dasharray="6,6" />
+            </svg>
+          </div>
+          <div class="what-corner" aria-hidden="true"></div>
+          <div class="what-content-in">
+            <h3>{service.title}</h3>
+            <p>{service.text}</p>
+            <p class="mono tools-label">Tools</p>
+            <p class="mono tools">{service.tools.join(" · ")}</p>
+          </div>
+          <div class="what-arrow" aria-hidden="true"></div>
+        </div>
+      ))}
+    </div>
+  </div>
 </section>
 
+<script>
+  // a real touch switches the cards from hover to tap: one tap opens a card and collapses the others
+  const box = document.querySelector<HTMLElement>(".what-box-in");
+  const cards = [...document.querySelectorAll<HTMLElement>(".what-content")];
+  document.addEventListener("touchstart", () => box?.classList.add("touch"), { once: true, passive: true });
+  for (const card of cards) {
+    card.addEventListener("click", () => {
+      if (!box?.classList.contains("touch")) return;
+      const open = !card.classList.contains("is-active");
+      for (const other of cards) {
+        other.classList.toggle("is-active", other === card && open);
+        other.classList.toggle("is-sibling", other !== card && open);
+      }
+    });
+  }
+</script>
+
 <style>
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-12) var(--space-8);
-    padding: 0;
-    list-style: none;
+  .whatIDO {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--c-width);
+    max-width: var(--c-max);
+    height: 100vh;
+    margin: auto;
   }
 
-  li {
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--line);
+  .what-box {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    width: 50%;
   }
 
-  .index {
-    color: var(--muted);
+  .what-head {
+    margin-right: 10%;
+    margin-bottom: 100px;
   }
 
-  h3 {
-    margin-top: var(--space-4);
-    font-size: var(--text-xl);
+  h2 {
+    font-size: calc(4vw + 25px);
+    font-weight: 800;
+    line-height: calc(4vw + 20px);
+    letter-spacing: -0.03em;
   }
 
-  .text {
-    margin-top: var(--space-3);
-    max-width: 38ch;
-    color: var(--muted);
+  .hat {
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  .what-row {
+    display: block;
+  }
+
+  .accent {
+    color: var(--accent);
   }
 
   .closing {
-    margin-top: clamp(3rem, 2rem + 4vw, 6rem);
-    font-size: var(--text-xl);
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    max-width: 22ch;
+    margin-top: 1.5rem;
+    color: var(--muted);
+    font-size: var(--text-lg);
   }
 
-  @media (max-width: 40rem) {
-    .grid {
-      grid-template-columns: 1fr;
-      gap: var(--space-8);
+  .what-box-in {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    margin-left: 200px;
+    color: var(--fg);
+  }
+
+  .what-content {
+    position: relative;
+    flex: 0 0 auto;
+    width: 450px;
+    height: 25%;
+    padding: 22px 40px;
+    transition: 0.5s;
+    outline: none;
+  }
+
+  /* hovered, focused or tapped card grows, the rest shrink (touch screens use taps instead) */
+  .what-box-in:not(:global(.touch)) .what-content:hover {
+    height: 46%;
+    padding: 30px 40px;
+  }
+
+  .what-box-in:not(:global(.touch)):hover .what-content:not(:hover) {
+    height: 18%;
+    padding: 12px 40px;
+  }
+
+  .what-content:focus-visible,
+  .what-content:global(.is-active) {
+    height: 46%;
+    padding: 30px 40px;
+  }
+
+  .what-box-in:has(.what-content:focus-visible) .what-content:not(:focus-visible),
+  .what-content:global(.is-sibling) {
+    height: 18%;
+    padding: 12px 40px;
+  }
+
+  /* the tools line only shows on an open card */
+  .what-content-in > .tools-label,
+  .what-content-in > .tools {
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .what-box-in:not(:global(.touch)) .what-content:hover .what-content-in > p,
+  .what-content:focus-visible .what-content-in > p,
+  .what-content:global(.is-active) .what-content-in > p {
+    opacity: 1;
+  }
+
+  .what-content-in {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
+  .what-content-in > p {
+    margin-top: 0.6rem;
+    max-width: 38ch;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .what-content-in > .tools-label {
+    margin-top: 1rem;
+    color: var(--accent);
+    font-size: 11px;
+  }
+
+  .what-content-in > .tools {
+    margin-top: 0.3rem;
+    color: var(--fg);
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* the four bracket corners of each card */
+  .what-content::before,
+  .what-corner::before,
+  .what-content::after,
+  .what-corner::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 4px solid var(--fg);
+  }
+
+  .what-content::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .what-corner::before {
+    top: -2px;
+    right: -2px;
+    border-bottom: none;
+    border-left: none;
+  }
+
+  .what-content::after {
+    bottom: -2px;
+    left: -2px;
+    border-top: none;
+    border-right: none;
+  }
+
+  .what-corner::after {
+    right: -2px;
+    bottom: -2px;
+    border-top: none;
+    border-left: none;
+  }
+
+  .what-arrow {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    width: 25px;
+    height: 25px;
+    border: 1px solid var(--fg);
+  }
+
+  .what-arrow::before {
+    content: "";
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-bottom: 1px solid var(--fg);
+    border-left: 1px solid var(--fg);
+    transform: translate(-50%, -50%) rotate(-45deg);
+    transition: 0.5s;
+  }
+
+  .what-content:hover .what-arrow::before,
+  .what-content:focus-visible .what-arrow::before,
+  .what-content:global(.is-active) .what-arrow::before {
+    transform: translate(-50%, -20%) rotate(-225deg);
+  }
+
+  .what-border1,
+  .what-border2 {
+    position: absolute;
+    opacity: 0.2;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .what-border1 {
+    top: 0;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    translate: -50% 0;
+  }
+
+  .what-border2 {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    translate: 0 -50%;
+  }
+
+  /* when scripts run, frames draw themselves in once the block scrolls into view */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.js) .what-box-in .what-border1 {
+      max-width: 0%;
+      opacity: 0.8;
+    }
+
+    :global(html.js) .what-box-in .what-border2 {
+      max-height: 0%;
+      opacity: 0.8;
+    }
+
+    :global(html.js) .what-box-in .what-content::before,
+    :global(html.js) .what-box-in .what-content::after,
+    :global(html.js) .what-box-in .what-corner::before,
+    :global(html.js) .what-box-in .what-corner::after,
+    :global(html.js) .what-box-in .what-content-in {
+      opacity: 0;
+    }
+
+    .what-box-in:global(.is-in) .what-border1,
+    .what-box-in:global(.is-in) .what-border2 {
+      animation: what-borders 1.2s forwards;
+    }
+
+    .what-box-in:global(.is-in) .what-content::before,
+    .what-box-in:global(.is-in) .what-content::after,
+    .what-box-in:global(.is-in) .what-corner::before,
+    .what-box-in:global(.is-in) .what-corner::after {
+      animation: what-corners 0.2s 0.5s forwards;
+    }
+
+    .what-box-in:global(.is-in) .what-content-in {
+      animation: what-flicker 0.5s 1s forwards;
+    }
+  }
+
+  @keyframes what-borders {
+    80% {
+      opacity: 0.8;
+    }
+    100% {
+      max-width: 100%;
+      max-height: 100%;
+      opacity: 0.2;
+    }
+  }
+
+  @keyframes what-corners {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes what-flicker {
+    0%,
+    25%,
+    35%,
+    60% {
+      opacity: 0;
+    }
+    30%,
+    40%,
+    50%,
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 1600px) {
+    .what-head {
+      margin-right: 18%;
+    }
+  }
+
+  @media (max-width: 1400px) {
+    .what-head {
+      margin-right: 15%;
+    }
+
+    .what-box-in {
+      height: 540px;
+      margin-left: 50px;
+    }
+
+    .what-content {
+      width: 400px;
+      padding: 18px 30px;
+    }
+
+    h3 {
+      font-size: 26px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .whatIDO {
+      height: auto;
+      padding-block: 50px;
+    }
+
+    .what-box-in {
+      margin-left: 0;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .whatIDO {
+      flex-direction: column;
+    }
+
+    .what-box {
+      width: 500px;
+      max-width: calc(100% - 50px);
+      margin: auto;
+    }
+
+    .what-box:first-child {
+      justify-content: flex-start;
+    }
+
+    .what-head {
+      margin: 50px 0;
+    }
+
+    h2 {
+      font-size: 55px;
+      line-height: 53px;
+    }
+
+    .what-box-in {
+      width: 100%;
+      height: 600px;
+    }
+
+    .what-content {
+      width: 100%;
+      padding: 16px 24px;
+    }
+
+    h3 {
+      font-size: 22px;
+    }
+  }
+
+  @media (max-width: 550px) {
+    .what-box {
+      max-width: calc(100% - 25px);
+      margin: 0 auto;
+    }
+
+    .what-content-in > p {
+      font-size: 14px;
     }
   }
 </style>
