@@ -83,8 +83,10 @@ export default function ProjectScene({ scene }: { scene: string }) {
     <div ref={box} className={`scene-canvas${ready ? " is-ready" : ""}`}>
       {supported && def && (
         <Canvas
-          // under reduced motion a single frame is drawn and nothing moves
-          frameloop={reduce ? "demand" : inView ? "always" : "never"}
+          // "demand" draws the first frame right away (also off screen, so it is ready when it
+          // arrives) and then only on request; on screen the scene animates. Under reduced motion
+          // that single frame is all there is.
+          frameloop={!reduce && inView ? "always" : "demand"}
           dpr={[1, 1.75]}
           gl={{ antialias: true, alpha: true }}
           camera={{ fov: def.camera.fov, near: 0.1, far: 50, position: def.camera.position }}

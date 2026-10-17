@@ -1,5 +1,6 @@
 ---
-// Box that holds a project's 3D scene. Without WebGL it stays a quiet empty surface.
+// Box that holds a project's 3D scene. Without WebGL it stays a quiet empty surface. The scene loads
+// well before it scrolls into view, so it is already drawn when it arrives.
 import ProjectScene from "./three/ProjectScene";
 
 interface Props {
@@ -10,7 +11,7 @@ const { scene, size = "card" } = Astro.props;
 ---
 
 <div class:list={["frame", size]} data-scene={scene} aria-hidden="true">
-  <ProjectScene client:visible scene={scene} />
+  <ProjectScene client:visible={{ rootMargin: "1200px" }} scene={scene} />
 </div>
 
 <style>
@@ -28,7 +29,7 @@ const { scene, size = "card" } = Astro.props;
     position: absolute;
     inset: 0;
     opacity: 0;
-    transition: opacity 700ms var(--ease-out);
+    transition: opacity 400ms var(--ease-out);
   }
 
   .frame :global(.scene-canvas.is-ready) {
