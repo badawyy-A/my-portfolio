@@ -57,6 +57,7 @@ export default function JarvisChat() {
   const [draft, setDraft] = useState("");
   const [announce, setAnnounce] = useState("");
   const [webgl, setWebgl] = useState(false);
+  const [focused, setFocused] = useState(false);
   const convo = useRef<Awaited<ReturnType<(typeof Conversation)["startSession"]>> | null>(null);
   const kind = useRef<Kind | null>(null);
   const opening = useRef<Promise<unknown> | null>(null);
@@ -64,7 +65,7 @@ export default function JarvisChat() {
   const turnsRef = useRef(turns);
   const nextId = useRef(1);
   const log = useRef<HTMLOListElement>(null);
-  const activity = useRef<Activity>({ speaking: false, thinking: false, level: () => 0, waveAt: 0.6 });
+  const activity = useRef<Activity>({ speaking: false, thinking: false, typing: false, level: () => 0, waveAt: 0.6 });
   turnsRef.current = turns;
 
   useEffect(() => {
@@ -83,12 +84,39 @@ export default function JarvisChat() {
     log.current?.scrollTo({ top: log.current.scrollHeight, behavior: "smooth" });
   }, [turns]);
 
+  // phones: the chat fills the part of the screen the keyboard leaves free (see jarvis.astro)
+  useEffect(() => {
+    const root = document.documentElement;
+    const vv = window.visualViewport;
+    const narrow = window.matchMedia("(max-width: 899px)");
+    const fit = () => {
+      root.classList.toggle("jc-app", narrow.matches);
+      if (!vv) return;
+      root.style.setProperty("--vv-top", `${vv.offsetTop}px`);
+      root.style.setProperty("--vv-height", `${vv.height}px`);
+      const keyboard = vv.height < window.innerHeight * 0.75;
+      if (keyboard && !root.classList.contains("jc-keyboard")) log.current?.scrollTo({ top: log.current.scrollHeight });
+      root.classList.toggle("jc-keyboard", keyboard);
+    };
+    fit();
+    vv?.addEventListener("resize", fit);
+    vv?.addEventListener("scroll", fit);
+    narrow.addEventListener("change", fit);
+    return () => {
+      vv?.removeEventListener("resize", fit);
+      vv?.removeEventListener("scroll", fit);
+      narrow.removeEventListener("change", fit);
+      root.classList.remove("jc-app", "jc-keyboard");
+    };
+  }, []);
+
   // what the robot shows
   useEffect(() => {
     const a = activity.current;
     a.speaking = mode === "speaking" || turns.some((t) => t.live);
     a.thinking = thinking;
-  }, [mode, thinking, turns]);
+    a.typing = focused && draft.trim().length > 0;
+  }, [mode, thinking, turns, focused, draft]);
 
   // a quiet chat closes itself (and he does not ask whether anyone is still there)
   useEffect(() => {
@@ -241,7 +269,7 @@ export default function JarvisChat() {
           </button>
         </div>
 
-        <ol className="jc-log" ref={log}>
+        <ol className="jc-log" ref={log} data-lenis-prevent>
           {turns.map((t) => (
             <li key={t.id} className={`jc-turn is-${t.role}`}>
               <span className="mono jc-who">{t.role === "agent" ? "Jarvis" : "You"}</span>
@@ -273,6 +301,8 @@ export default function JarvisChat() {
             id="jc-input"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             placeholder="Ask about Badawi or your idea"
             autoComplete="off"
             maxLength={600}

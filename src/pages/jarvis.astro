@@ -3,11 +3,14 @@
 // by Badawi on 2026-10-18). The chat runs on an ElevenLabs agent; see scripts/jarvis/agent.mjs.
 import Base from "../layouts/Base.astro";
 import JarvisChat from "../components/three/JarvisChat";
+import NewTabNote from "../components/NewTabNote.astro";
+import { newTab } from "../lib/links";
 ---
 
 <Base title="Talk to Jarvis · Badawi" description="Ask Jarvis, Badawi's assistant, about his work and career, or about what it takes to build your idea.">
   <section class="jarvis container">
     <header class="intro">
+      <a class="mono home" href="/" {...newTab()}>← badawi.dev<NewTabNote /></a>
       <h1>Talk to <span>Jarvis</span></h1>
       <p class="lead">Ask about Badawi's work and career, or about what it would take to build your idea. Jarvis keeps to those topics.</p>
     </header>
@@ -25,11 +28,11 @@ import JarvisChat from "../components/three/JarvisChat";
     padding-bottom: 60px;
   }
 
-  /* phones: below the taller, stacked header */
-  @media (max-width: 600px) {
-    .jarvis {
-      padding-top: 175px;
-    }
+  /* the way back home only shows in the phone layout, where the site header is covered */
+  .home {
+    display: none;
+    color: var(--muted);
+    text-decoration: none;
   }
 
   .intro {
@@ -241,6 +244,96 @@ import JarvisChat from "../components/three/JarvisChat";
 
     .jarvis :global(.jc-log) {
       height: 420px;
+    }
+  }
+
+  /* phones and small tablets: a full-screen chat like a messaging app, fitted to the part of the
+     screen the keyboard leaves free (JarvisChat keeps --vv-top and --vv-height in step with the
+     visual viewport), so Jarvis stays in view at the top while the visitor types */
+  @media (max-width: 899px) {
+    .jarvis {
+      position: fixed;
+      top: var(--vv-top, 0px);
+      right: 0;
+      left: 0;
+      z-index: 70;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: none;
+      height: var(--vv-height, 100dvh);
+      margin: 0;
+      padding: 12px 12px calc(10px + env(safe-area-inset-bottom));
+      background: var(--bg);
+    }
+
+    .intro {
+      display: flex;
+      flex: none;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: none;
+      margin-bottom: 8px;
+    }
+
+    .home {
+      display: inline-block;
+    }
+
+    h1 {
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      display: none;
+    }
+
+    .privacy {
+      flex: none;
+      margin-top: 6px;
+      font-size: 10px;
+    }
+
+    :global(html.jc-keyboard) .privacy {
+      display: none;
+    }
+
+    .jarvis :global(.jc) {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .jarvis :global(.jc-stage) {
+      flex: 0 0 30%;
+      height: auto;
+      min-height: 96px;
+    }
+
+    .jarvis :global(.jc-panel) {
+      flex: 1;
+      min-height: 0;
+      padding: 12px;
+    }
+
+    .jarvis :global(.jc-log) {
+      flex: 1;
+      height: auto;
+      min-height: 0;
+      margin: 8px 0;
+    }
+
+    /* below 16px, iPhones zoom the page in when the text box gets focus */
+    .jarvis :global(.jc-form input) {
+      font-size: 16px;
+    }
+
+    :global(html.jc-app body) {
+      overflow: hidden;
     }
   }
 

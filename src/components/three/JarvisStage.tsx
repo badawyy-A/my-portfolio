@@ -9,8 +9,8 @@ import { prefersReducedMotion } from "./utils";
 const ROBOT_MODEL = "/models/robot.glb";
 const now = () => performance.now() / 1000;
 
-/** What the robot is doing, set by the chat: speaking, thinking, how loud, when to wave. */
-export type Activity = { speaking: boolean; thinking: boolean; level: () => number; waveAt: number };
+/** What the robot is doing, set by the chat: speaking, thinking, watching the visitor type, how loud, when to wave. */
+export type Activity = { speaking: boolean; thinking: boolean; typing: boolean; level: () => number; waveAt: number };
 
 /** The 3D robot beside Jarvis's chat (loaded separately from the chat, so the chat is ready first). */
 export default function JarvisStage({ activity }: { activity: RefObject<Activity> }) {
@@ -40,7 +40,7 @@ function Robot({ activity }: { activity: RefObject<Activity> }) {
   const reduce = useMemo(prefersReducedMotion, []);
   const pointer = useRef({ x: 0, y: 0 });
   const blink = useRef(3);
-  const state = useRef({ talk: 0, think: 0, level: 0 });
+  const state = useRef({ talk: 0, think: 0, watch: 0, level: 0 });
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
@@ -57,6 +57,7 @@ function Robot({ activity }: { activity: RefObject<Activity> }) {
     const k = Math.min(1, delta * 6);
     s.talk += ((a.speaking ? 1 : 0) - s.talk) * k;
     s.think += ((a.thinking ? 1 : 0) - s.think) * k;
+    s.watch += ((a.typing && !a.speaking ? 1 : 0) - s.watch) * k;
     s.level += (a.level() - s.level) * 0.35;
 
     let pose: Pose = reduce ? moves.stand(0) : moves.stand(t);
@@ -64,6 +65,8 @@ function Robot({ activity }: { activity: RefObject<Activity> }) {
     pose = { ...pose, head: [p.y * 0.25, p.x * 0.5, pose.head?.[2] ?? 0] };
     if (!reduce) {
       pose = mixPoses(pose, moves.talk(t, s.level), s.talk * 0.85);
+      // the visitor is typing: he looks down at what they write, head a little to one side
+      pose = mixPoses(pose, { ...pose, head: [0.34, 0.12, 0.1], chest: [0.06, 0, 0] }, s.watch);
       // thinking: head tilted, looking up a little
       pose = mixPoses(pose, { ...pose, head: [-0.12, 0.2, 0.22], chest: [0.02, 0.08, 0] }, s.think);
       const w = t - a.waveAt;
