@@ -8,7 +8,7 @@ const site = await getSite();
 // on the home page the links only scroll the page; elsewhere they lead to the home page, in a new tab
 const home = Astro.url.pathname === "/";
 const base = home ? "" : "/";
-const away = home ? {} : newTab;
+const away = () => (home ? {} : newTab());
 const links = [
   { href: `${base}#about`, label: "About" },
   { href: `${base}#experience`, label: "Experience" },
@@ -18,13 +18,13 @@ const links = [
 ---
 
 <header class="header" data-intro="fade">
-  <a class="wordmark" href={home ? "#top" : "/"} {...away}>badawi.dev{!home && <NewTabNote />}</a>
-  <a class="connect" href={`mailto:${site.links.email}`} {...newTab}>{site.links.email}<NewTabNote /></a>
+  <a class="wordmark" href={home ? "#top" : "/"} {...away()}>badawi.dev{!home && <NewTabNote />}</a>
+  <a class="connect" href={`mailto:${site.links.email}`} {...newTab()}>{site.links.email}<NewTabNote /></a>
   <nav aria-label="Main">
     <ul>
       {links.map((link) => (
         <li>
-          <a class="mono" href={link.href} {...away}>
+          <a class="mono" href={link.href} {...away()}>
             <HoverText text={link.label} />
             {!home && <NewTabNote />}
           </a>

@@ -21,7 +21,7 @@ const { Content } = await render(project);
 <Base title={`${title} · Badawi`} description={summary}>
   <article class="project">
     <header class="container intro">
-      <a class="mono back" href="/#work" {...newTab}>← All work<NewTabNote /></a>
+      <a class="mono back" href="/#work" {...newTab()}>← All work<NewTabNote /></a>
       <p class="mono stack">{stack.join(" · ")}</p>
       <h1>{title}</h1>
       <p class="summary">{summary}</p>

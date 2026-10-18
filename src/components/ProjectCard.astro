@@ -21,7 +21,7 @@ const href = `/work/${project.id}/`;
     <div class="work-title">
       <p class="num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</p>
       <div>
-        <h3><a href={href} {...newTab}>{title}<NewTabNote /></a></h3>
+        <h3><a href={href} {...newTab()}>{title}<NewTabNote /></a></h3>
         <p class="category">{category}</p>
       </div>
     </div>
@@ -29,7 +29,7 @@ const href = `/work/${project.id}/`;
     <p class="label">Stack</p>
     <p class="stack">{stack.join(", ")}</p>
   </div>
-  <a class="work-image" href={href} tabindex="-1" aria-hidden="true" {...newTab}>
+  <a class="work-image" href={href} tabindex="-1" aria-hidden="true" {...newTab()}>
     <SceneFrame scene={scene} />
     <span class="work-link"><Icon name="arrow" size={22} /></span>
   </a>

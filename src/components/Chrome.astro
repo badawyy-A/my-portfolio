@@ -28,8 +28,7 @@ const social = [
         <a
           href={item.href}
           aria-label={`${item.label} ${NEW_TAB_NOTE}`}
-          {...newTab}
-          rel={item.icon === "email" ? newTab.rel : `me ${newTab.rel}`}
+          {...newTab(item.icon === "email" ? undefined : "me")}
         >
           <Icon name={item.icon} size={22} />
         </a>
