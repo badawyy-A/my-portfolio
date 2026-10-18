@@ -64,6 +64,8 @@ Feel: layout and interactions follow the reference template github.com/red1-for-
 
 Accessibility: text contrast 4.5:1, visible focus states, real links/buttons, `prefers-reduced-motion` turns off idle animation and scroll effects, site works and reads fully with WebGL off.
 
+Links: every link that leaves the current page (other pages of the site, external sites, email, WhatsApp) opens in a new tab (`newTab` from `src/lib/links.ts`: target _blank, rel noopener, plus a hidden "(opens in a new tab)" note via `NewTabNote`). Links that only scroll the current page (home nav, "Get in touch", skip link) stay in the page. Badawi asked for this on 2026-10-18.
+
 ## Home page, top to bottom
 
 0. Loading screen (full 3D sequence only): light screen, marquee "AI engineer / Full-stack engineer", dark pill counting to 100% while the avatar loads, then it expands into the page. Avatar entrance, one continuous movement: he starts curled down below the frame and unrolls upward like someone stretching awake (hips rise, spine straightens from the bottom up, head comes up last, crown first), stretches a little at the top, then settles standing relaxed. Arms hang from the shoulders while he is bent over. Hero pose: standing relaxed, arms hanging close to the body with soft elbows and gently curled fingers (no A-pose, no crossed arms: Badawi removed them on 2026-10-17). Any arm motion must look natural, with joints staggered rather than all moving at once. His black T-shirt has "badawi.dev" on the chest ("badawi" cream, ".dev" burgundy), painted at runtime in the site font; the chest position on the shirt's texture is measured from its UV layout in `avatar/shirt.ts`.
