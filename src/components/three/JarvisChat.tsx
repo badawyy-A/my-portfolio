@@ -26,21 +26,27 @@ function readMuted() {
 
 /**
  * Visitors only type; Jarvis answers out loud. ElevenLabs voice chats always open a microphone, so on
- * this page the microphone they get is a silent stand-in: the browser never asks for permission and
- * Jarvis never hears anything (any other use of getUserMedia is untouched).
+ * this page the microphone is a silent stand-in: the browser never asks for permission and Jarvis
+ * never hears anything. It replaces the browser's own getUserMedia (on MediaDevices.prototype, so no
+ * copy kept elsewhere can reach the real one) as soon as this module loads, before any chat starts
+ * and before the ElevenLabs client and its WebRTC helpers load. Camera requests are untouched.
  */
 function silenceTheMicrophone() {
-  const media = navigator.mediaDevices as (MediaDevices & { jarvisSilent?: boolean }) | undefined;
-  if (!media?.getUserMedia || media.jarvisSilent) return;
-  const original = media.getUserMedia.bind(media);
+  type Silenced = MediaDevices & { jarvisSilent?: boolean };
+  if (typeof MediaDevices === "undefined" || (MediaDevices.prototype as Silenced).jarvisSilent) return;
+  const native = MediaDevices.prototype.getUserMedia;
   let ctx: AudioContext | undefined;
-  media.getUserMedia = async (constraints) => {
-    if (!constraints?.audio || constraints.video) return original(constraints);
+  const silent = function (this: MediaDevices, constraints?: MediaStreamConstraints) {
+    if (!constraints?.audio || constraints.video) return native.call(this, constraints);
     ctx ??= new AudioContext();
-    return ctx.createMediaStreamDestination().stream;
+    return Promise.resolve(ctx.createMediaStreamDestination().stream);
   };
-  media.jarvisSilent = true;
+  MediaDevices.prototype.getUserMedia = silent;
+  // a polyfill may have put its own copy on the object itself, which would hide the prototype's
+  if (navigator.mediaDevices && Object.prototype.hasOwnProperty.call(navigator.mediaDevices, "getUserMedia")) navigator.mediaDevices.getUserMedia = silent;
+  (MediaDevices.prototype as Silenced).jarvisSilent = true;
 }
+if (typeof window !== "undefined") silenceTheMicrophone();
 
 /**
  * The /jarvis page: a chat with Jarvis (an ElevenLabs agent, see scripts/jarvis/agent.mjs). The
@@ -69,7 +75,6 @@ export default function JarvisChat() {
   turnsRef.current = turns;
 
   useEffect(() => {
-    silenceTheMicrophone();
     setMuted(readMuted());
     setWebgl(hasWebGL());
     const end = () => void convo.current?.endSession();
@@ -206,6 +211,14 @@ export default function JarvisChat() {
     } catch (error) {
       console.warn("Jarvis could not start a chat:", error);
       setStatus("idle");
+      // a voice chat that cannot start (whatever the browser objects to): answer in text instead
+      if (want === "voice") {
+        opening.current = null;
+        if (await open("text")) {
+          setNote("Jarvis answered in text this time.");
+          return true;
+        }
+      }
       setNote("Jarvis can't chat right now. You can email hello@badawi.dev instead.");
       return false;
     } finally {
