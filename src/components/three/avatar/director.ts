@@ -27,6 +27,7 @@ const SECTIONS = [
 export type SectionId = (typeof SECTIONS)[number]["id"];
 export type Mode = "desktop" | "mobile" | null;
 type Point = { x: number; y: number };
+type Box = { left: number; top: number; right: number; bottom: number };
 
 /**
  * What he can stand on in each section: text (he stands on the letters of its first line) and boxes
@@ -56,6 +57,13 @@ function textRects(el: Element) {
   }
   return rects;
 }
+
+/** what his speech bubble must not cover: every word, picture, card, tile and button on screen,
+ * and the fixed corner controls */
+const BLOCKERS = {
+  text: "main :is(h1, h2, h3, p, .cycle)",
+  box: "main :is(.work-image, .tile, .cta-button, .step, .what-content, .career-timeline), .icons-section .social, .icons-section .caption, .jarvis-sound",
+};
 
 /** Something he stands on, and where along it. "fixed" is the sound button, when nothing else is free. */
 type Perch = { el: Element; kind: "text" | "box" | "fixed"; at: "right" | "left" | "middle"; section: SectionId | null };
@@ -89,6 +97,8 @@ export class Director {
   /** the robot on the section headings: shown, feet on screen, size (1 = robotSize()), facing, jump */
   robot = { shown: false, x: 0, y: 0, scale: 1, yaw: 0, jump: -1, dir: 0 };
   hero: HeroReport | null = null;
+  /** where Badawi is on screen, part by part (and the desk); the hero canvas writes it every frame */
+  avatar: { boxes: Box[]; at: number } | null = null;
   /** whether the robot on Badawi's shoulder is drawn */
   heroShown = true;
   /** set when the visitor scrolls past the hero before his entrance is over: he skips to the end */
@@ -113,6 +123,7 @@ export class Director {
   private lingerUntil = -Infinity;
   private bubbleLine = "";
   private said = -2;
+  private bubbleKey = "";
   private raf = 0;
 
   constructor(
@@ -447,9 +458,12 @@ export class Director {
       this.bubbleLine = current;
       this.said = -2;
     }
-    const show = visible && (!!current || t < this.lingerUntil) && !!this.bubbleLine;
-    bubble.classList.toggle("is-on", show);
-    if (!show) return;
+    // on phones there is never room beside him, so he only talks; elsewhere the bubble shows only
+    // where it covers nothing at all
+    const wanted = visible && window.innerWidth > 600 && (!!current || t < this.lingerUntil) && !!this.bubbleLine;
+    const spot = wanted ? this.bubbleSpot(bubble, feet!, head!, onShoulder, t) : null;
+    bubble.classList.toggle("is-on", !!spot);
+    if (!spot) return;
 
     // the words light up as he says them
     const line = this.narrator.lines[this.bubbleLine];
@@ -460,70 +474,86 @@ export class Director {
       if (said !== this.said) {
         this.said = said;
         words.forEach((word, i) => word.classList.toggle("is-said", i < said));
-        // as subtitles (phones) only the sentence he is on shows, like film subtitles
-        const at = Math.max(0, Math.min(said, line.words.length) - 1);
-        let first = at;
-        while (first > 0 && !/[.!?]$/.test(line.words[first - 1].text)) first--;
-        let last = at;
-        while (last < line.words.length - 1 && !/[.!?]$/.test(line.words[last].text)) last++;
-        words.forEach((word, i) => word.classList.toggle("in-sentence", i >= first && i <= last));
       }
     }
+    bubble.dataset.side = spot.side;
+    bubble.style.transform = `translate(${spot.x}px, ${spot.y}px)`;
+    bubble.style.setProperty("--tail", `${spot.tail}px`);
+  }
 
-    // on phones, like subtitles at the bottom of the screen (beside him it would cover the scene or
-    // the page); otherwise on the shoulder above his head (beside or below where that would hit the
-    // header), and on a perch beside his head
-    if (window.innerWidth <= 600) {
-      bubble.dataset.side = "caption";
-      bubble.style.transform = `translate(12px, ${window.innerHeight - bubble.offsetHeight - 84}px)`;
-      return;
+  /** Everything on screen the bubble must not cover: the page's words, pictures, cards, tiles and
+   * buttons, the fixed corner buttons, Badawi, and Jarvis himself. */
+  private blockers(t: number, robot: Box): Box[] {
+    const out: Box[] = [robot];
+    const onScreen = (r: Box) => r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth && r.right > r.left;
+    for (const el of document.querySelectorAll(BLOCKERS.text)) {
+      if (!onScreen(el.getBoundingClientRect())) continue;
+      const rects = textRects(el);
+      if (!rects.length) continue;
+      const r = {
+        left: Math.min(...rects.map((q) => q.left)),
+        top: Math.min(...rects.map((q) => q.top)),
+        right: Math.max(...rects.map((q) => q.right)),
+        bottom: Math.max(...rects.map((q) => q.bottom)),
+      };
+      if (onScreen(r)) out.push(r);
     }
+    for (const el of document.querySelectorAll(BLOCKERS.box)) {
+      const r = el.getBoundingClientRect();
+      if (onScreen(r) && this.visible(el)) out.push(r);
+    }
+    if (this.avatar && t - this.avatar.at < 0.3) out.push(...this.avatar.boxes.filter(onScreen));
+    return out;
+  }
+
+  /**
+   * Where the bubble can go: beside his head (level, a little higher or lower), or above or below him
+   * (centred or reaching to either side), on screen and covering nothing. The side it is on stays
+   * while it is still free, so it does not jump around; null when there is no free place.
+   */
+  private bubbleSpot(bubble: HTMLElement, feet: Point, head: Point, onShoulder: boolean, t: number) {
     const w = bubble.offsetWidth;
     const h = bubble.offsetHeight;
+    const r = (feet.y - head.y) * 0.4;
+    const mid = head.y + (feet.y - head.y) * 0.3;
+    const gap = 14;
     const top = this.headerBottom() + 8;
-    const r = (feet!.y - head!.y) * 0.45;
-    let side: "above" | "below" | "right" | "left";
-    let x: number;
-    let y: number;
-    let tail: number;
-    const mid = head!.y + (feet!.y - head!.y) * 0.3;
-    if (onShoulder) {
-      // above his head; else beside him, away from Badawi (to the left); else below his feet
-      x = clamp(head!.x - w + 34, 12, window.innerWidth - w - 12);
-      y = head!.y - h - 12;
-      side = "above";
-      tail = clamp(head!.x - x, 18, w - 18);
-      if (y < top && feet!.x - r - 14 - w >= 12) {
-        side = "left";
-        x = feet!.x - r - 14 - w;
-        y = clamp(mid - h / 2, top, window.innerHeight - h - 8);
-        tail = clamp(mid - y, 16, h - 16);
-      } else if (y < top) {
-        side = "below";
-        y = feet!.y + 12;
-      }
-    } else {
-      y = clamp(mid - h / 2, top, window.innerHeight - h - 8);
-      tail = clamp(mid - y, 16, h - 16);
-      // away from what he stands on: standing at the left end of a title, the bubble opens to the left
-      const fitsRight = feet!.x + r + 14 + w <= window.innerWidth - 12;
-      const fitsLeft = feet!.x - r - 14 - w >= 12;
-      const preferLeft = this.place !== "shoulder" && this.place.at === "left";
-      if (fitsRight && !(preferLeft && fitsLeft)) {
-        side = "right";
-        x = feet!.x + r + 14;
-      } else if (fitsLeft) {
-        side = "left";
-        x = feet!.x - r - 14 - w;
-      } else {
-        side = "below";
-        x = clamp(feet!.x - w / 2, 12, window.innerWidth - w - 12);
-        y = feet!.y + 12;
-        tail = clamp(feet!.x - x, 18, w - 18);
+    type Spot = { side: "right" | "left" | "above" | "below"; x: number; y: number; tail: number; key: string };
+    const spots: Spot[] = [];
+    for (const side of ["right", "left"] as const) {
+      for (const dy of [0, -0.35, 0.35]) {
+        const y = mid - h / 2 + dy * h;
+        spots.push({ side, x: side === "right" ? feet.x + r + gap : feet.x - r - gap - w, y, tail: clamp(mid - y, 16, h - 16), key: `${side}${dy}` });
       }
     }
-    bubble.dataset.side = side;
-    bubble.style.transform = `translate(${x}px, ${y}px)`;
-    bubble.style.setProperty("--tail", `${tail}px`);
+    for (const side of ["above", "below"] as const) {
+      for (const reach of [0.5, 1, 0]) {
+        for (const lift of [0, 24]) {
+          const x = head.x - (w - 68) * reach - 34;
+          const y = side === "above" ? head.y - h - gap - lift : feet.y + gap + lift;
+          spots.push({ side, x, y, tail: clamp(head.x - x, 18, w - 18), key: `${side}${reach}${lift}` });
+        }
+      }
+    }
+    // preferred order: on the shoulder above him first (then away from Badawi, to the left); on a
+    // perch beside him, away from what he stands on
+    const preferLeft = this.place !== "shoulder" && this.place.at === "left";
+    const rank = (s: Spot) =>
+      (s.key === this.bubbleKey ? -10 : 0) +
+      (onShoulder ? { above: 0, left: 1, right: 2, below: 3 }[s.side] : { right: preferLeft ? 1 : 0, left: preferLeft ? 0 : 1, above: 2, below: 3 }[s.side]);
+    spots.sort((a, b) => rank(a) - rank(b));
+
+    const blockers = this.blockers(t, { left: feet.x - r, right: feet.x + r, top: head.y, bottom: feet.y });
+    const margin = 6;
+    const free = spots.find(
+      (s) =>
+        s.x >= 12 &&
+        s.x + w <= window.innerWidth - 12 &&
+        s.y >= top &&
+        s.y + h <= window.innerHeight - 8 &&
+        !blockers.some((b) => b.left < s.x + w + margin && b.right > s.x - margin && b.top < s.y + h + margin && b.bottom > s.y - margin),
+    );
+    this.bubbleKey = free?.key ?? "";
+    return free ?? null;
   }
 }

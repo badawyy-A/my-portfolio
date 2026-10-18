@@ -201,21 +201,6 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
     transform: translate(-50%, -50%) rotate(-45deg);
   }
 
-  /* phones: like subtitles, across the bottom of the screen */
-  :global(.jarvis-bubble[data-side="caption"]) {
-    width: calc(100vw - 24px);
-    max-width: none;
-    background: rgb(20 12 14 / 0.98);
-  }
-
-  :global(.jarvis-bubble[data-side="caption"])::after {
-    display: none;
-  }
-
-  :global(.jarvis-bubble[data-side="caption"] [data-word]:not(.in-sentence)) {
-    display: none;
-  }
-
   :global(.jarvis-name) {
     display: block;
     margin-bottom: 0.25rem;

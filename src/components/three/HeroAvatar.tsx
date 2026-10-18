@@ -19,6 +19,16 @@ type Mode = "desktop" | "mobile" | null;
 
 const bodyQuat = new THREE.Quaternion();
 const pitchAxis = new THREE.Vector3();
+const point = new THREE.Vector3();
+const deskBox = new THREE.Box3();
+/** his parts as groups of bones, each outlined on screen as a box (the head reaches up to his hair) */
+const PARTS = [
+  ["Head"],
+  ["Neck", "LeftArm", "RightArm", "Hips"],
+  ["LeftArm", "LeftForeArm", "LeftHand"],
+  ["RightArm", "RightForeArm", "RightHand"],
+  ["LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot"],
+];
 
 
 type AvatarProps = { reduce: boolean; mode: Mode; director: Director | null; onReady: () => void };
@@ -26,7 +36,9 @@ type AvatarProps = { reduce: boolean; mode: Mode; director: Director | null; onR
 function Avatar({ reduce, mode, director, onReady }: AvatarProps) {
   const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
   const camera = useThree((state) => state.camera);
+  const canvas = useThree((state) => state.gl.domElement);
   const size = useThree((state) => state.size);
+  const parts = useMemo(() => PARTS.map((names) => names.map((name) => scene.getObjectByName(name)).filter((b): b is THREE.Object3D => !!b)), [scene]);
   const avatar = useRef(rig(scene));
   const furniture = useMemo<Furniture>(() => {
     scene.userData.furniture ??= buildFurniture(avatar.current.layout);
@@ -185,7 +197,48 @@ function Avatar({ reduce, mode, director, onReady }: AvatarProps) {
     }
 
     afterFrame.current?.();
+    if (director) director.avatar = screenOutline();
   });
+
+  /**
+   * Where he is on screen, part by part (head, torso, arms, legs, and the desk once it is up), so
+   * Jarvis's speech bubble can keep off him.
+   */
+  function screenOutline() {
+    const rect = canvas.getBoundingClientRect();
+    const toScreen = (v: THREE.Vector3) => {
+      v.project(camera);
+      return { x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
+    };
+    const box = (points: THREE.Vector3[], pad: number) => {
+      const p = points.map(toScreen);
+      return {
+        left: Math.min(...p.map((q) => q.x)) - pad,
+        right: Math.max(...p.map((q) => q.x)) + pad,
+        top: Math.min(...p.map((q) => q.y)) - pad,
+        bottom: Math.max(...p.map((q) => q.y)) + pad,
+      };
+    };
+    // how many pixels a metre is, at his depth
+    const head = parts[0][0]?.getWorldPosition(new THREE.Vector3());
+    const metre = head ? Math.abs(toScreen(head.clone().add(new THREE.Vector3(0.5, 0, 0))).x - toScreen(head.clone()).x) * 2 : 300;
+    const boxes = parts
+      .filter((bones) => bones.length)
+      .map((bones, i) => {
+        const points = bones.map((b) => b.getWorldPosition(new THREE.Vector3()));
+        if (i === 0) points.push(points[0].clone().setY(points[0].y + 0.24));
+        return box(points, metre * (i === 0 ? 0.11 : i === 1 ? 0.12 : 0.07));
+      });
+    if (furniture.desk.visible && furniture.desk.position.y > -1.4) {
+      deskBox.setFromObject(furniture.desk);
+      const corners: THREE.Vector3[] = [];
+      for (const x of [deskBox.min.x, deskBox.max.x])
+        for (const y of [deskBox.min.y, deskBox.max.y]) for (const z of [deskBox.min.z, deskBox.max.z]) corners.push(point.clone().set(x, y, z));
+      boxes.push(box(corners, 0));
+    }
+    return { boxes: boxes.map((b) => ({ ...b, bottom: Math.min(b.bottom, rect.bottom) })), at: performance.now() / 1000 };
+  }
+
 
   return (
     <group ref={body}>
