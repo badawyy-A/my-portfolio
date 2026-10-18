@@ -53,7 +53,7 @@ function Avatar({ reduce, mode, director, onReady }: AvatarProps) {
   const ready = useRef(false);
   const body = useRef<THREE.Group>(null);
   // hero pose: standing, arms relaxed at his sides (the desktop intro starts from a crouch instead)
-  const view = useRef<View>({ dx: 0, dz: 0, dy: 0, dlook: 0, crouch: 0, nod: 0, shrug: 0, sit: 0, typing: 0, screen: 0, scripted: 0 });
+  const view = useRef<View>({ dz: 0, dy: 0, dlook: 0, crouch: 0, nod: 0, shrug: 0, sit: 0, typing: 0, screen: 0, scripted: 0 });
   const frame = useRef({ z: 1.7, y: 1.2, look: 1.2 });
 
   useLayoutEffect(() => {
@@ -85,8 +85,8 @@ function Avatar({ reduce, mode, director, onReady }: AvatarProps) {
     const t = state.clock.elapsedTime;
     const { z, y, look: lookAt } = frame.current;
     const v = view.current;
-    camera.position.set(v.dx, y + v.dy, z + v.dz);
-    camera.lookAt(v.dx, lookAt + v.dlook, 0);
+    camera.position.set(0, y + v.dy, z + v.dz);
+    camera.lookAt(0, lookAt + v.dlook, 0);
 
     // where the head looks: the mouse in the hero; past it, toward the content (right on desktop,
     // down at the text on phones); at the desk, down at the laptop
@@ -186,12 +186,13 @@ function Avatar({ reduce, mode, director, onReady }: AvatarProps) {
     if (!ready.current) {
       ready.current = true;
       // both scroll sequences: he rises from his crouch, then the scenes play as the page scrolls
-      furniture.desk.visible = mode !== null;
+      // (the desk scene only on large screens)
+      furniture.desk.visible = mode === "desktop";
       furniture.desk.position.y = -1.6;
       if (mode !== null && body.current) {
         crouchIntro(body.current, v);
         if (mode === "desktop") scrollSequence(body.current, v, furniture, drop);
-        else scrollSequenceMobile(body.current, v, furniture, drop);
+        else scrollSequenceMobile(body.current, v);
       }
       onReady();
     }

@@ -4,8 +4,8 @@ import type { Narrator } from "./narrator";
 /**
  * Jarvis's guided tour of the home page. Watches which section is on screen and decides where he is
  * and what he says:
- * - He rides on Badawi's shoulder while the avatar is on screen (hero, About and What I build).
- *   In the other sections he always stands on something real:
+ * - He rides on Badawi's shoulder while the avatar is on screen (hero, About and What I build on
+ *   large screens; the hero on phones). In the other sections he always stands on something real:
  *   arriving in a section he jumps onto its heading; when the page moves his perch so far that he
  *   would cross under the site header, or slide off the screen, he jumps to the nearest visible
  *   perch above or below (a title, a card, a timeline row, a tile) with room for him on top.
@@ -73,7 +73,7 @@ const same = (a: Place, b: Place) => a === b || (a !== "shoulder" && b !== "shou
 /** Where the robot on Badawi's shoulder is on screen; the hero canvas writes it every frame. */
 export type HeroReport = { seated: boolean; feet: Point; head: Point; at: number };
 
-const SHOULDER: Record<"desktop" | "mobile", SectionId[]> = { desktop: ["hero", "about", "services"], mobile: ["hero", "about", "services"] };
+const SHOULDER: Record<"desktop" | "mobile", SectionId[]> = { desktop: ["hero", "about", "services"], mobile: ["hero"] };
 /** a jump between places, in seconds */
 const JUMP = 0.8;
 /** a section must stay on screen this long before he starts talking about it */
