@@ -136,8 +136,9 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
     display: none;
   }
 
-  /* Jarvis's speech bubble and the tap target over him: rendered at the end of the page by the avatar
-     island, which moves them with him every frame */
+  /* Jarvis outside the hero canvas: his speech bubble, the tap target over him, the small canvas he
+     is drawn in on the section headings, and the sound button. Rendered at the end of the page by
+     the avatar island, which moves them with him every frame. */
   :global(.jarvis-bubble) {
     position: fixed;
     top: 0;
@@ -168,7 +169,7 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
     }
   }
 
-  /* the tail points down at his head */
+  /* the tail points at him: down from above his head, up from below his feet, or sideways */
   :global(.jarvis-bubble)::after {
     content: "";
     position: absolute;
@@ -182,10 +183,32 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
     transform: translate(-50%, -50%) rotate(45deg);
   }
 
-  :global(.jarvis-bubble.is-below)::after {
+  :global(.jarvis-bubble[data-side="below"])::after {
     top: auto;
     bottom: 100%;
     transform: translate(-50%, 50%) rotate(225deg);
+  }
+
+  :global(.jarvis-bubble[data-side="right"])::after {
+    top: var(--tail, 50%);
+    left: 0;
+    transform: translate(-50%, -50%) rotate(135deg);
+  }
+
+  :global(.jarvis-bubble[data-side="left"])::after {
+    top: var(--tail, 50%);
+    left: 100%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  /* phones: like subtitles, across the bottom of the screen */
+  :global(.jarvis-bubble[data-side="caption"]) {
+    width: calc(100vw - 24px);
+    max-width: none;
+  }
+
+  :global(.jarvis-bubble[data-side="caption"])::after {
+    display: none;
   }
 
   :global(.jarvis-name) {
@@ -204,8 +227,7 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
     transition: opacity 0.15s linear;
   }
 
-  :global(.jarvis-line .is-said),
-  :global(.jarvis-bubble.is-silent [data-word]) {
+  :global(.jarvis-line .is-said) {
     opacity: 1;
   }
 
@@ -224,6 +246,63 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
   :global(.jarvis-hit:focus-visible) {
     outline: 2px solid var(--accent);
     outline-offset: 4px;
+  }
+
+  :global(.jarvis-stage) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 34;
+    pointer-events: none;
+  }
+
+  /* bottom right, level with the social column */
+  :global(.jarvis-sound) {
+    position: fixed;
+    right: max(20px, calc((100vw - min(var(--c-width), var(--c-max))) / 2));
+    bottom: 26px;
+    z-index: 45;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: rgb(20 12 14 / 0.85);
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+      color 0.3s var(--ease-out),
+      border-color 0.3s var(--ease-out);
+  }
+
+  :global(.jarvis-sound svg) {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  :global(.jarvis-sound[aria-pressed="true"]) {
+    border-color: rgb(217 69 95 / 0.45);
+    color: var(--fg);
+  }
+
+  :global(.jarvis-sound:hover),
+  :global(.jarvis-sound:focus-visible) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  :global(.jarvis-sound:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  :global(html.loading .jarvis-sound) {
+    display: none;
   }
 
   .landing-container {

@@ -1,0 +1,10 @@
+{
+  "hero": "I'm Jarvis, Badawi's smart assistant. If you ever need to ask about anything, just tap on me and talk to me.",
+  "about": "Alright, let me tell you about Badawi. He's an AI and full-stack engineer in Cairo, and an AI engineer at Fixed Solutions, where he started as an intern in 2024.",
+  "services": "So, what does he build? AI features that work on real data, full-stack apps, data pipelines, and the deployment that keeps it all running. The whole thing, or just the part you need.",
+  "process": "Follow me! This is how he delivers. Plan it with you, build it in small releases that already work, ship it to real users, then keep supporting it.",
+  "experience": "Here's his career. Intern at Fixed Solutions in August 2024, junior AI engineer that October, and AI engineer since October 2025. Plus a computer science degree, 2021 to 2025.",
+  "work": "Now my favourite part, his work. Smart glasses software, an eKYC identity check, an Arabic document reader, a legal assistant, and a data pipeline. Open any of them to see how it works.",
+  "stack": "These are his tools. Python, PyTorch and OpenCV for the models, FastAPI and PostgreSQL behind them, React and Flutter in front, and Docker to ship it.",
+  "contact": "And that's the tour! Have a product in mind? Email hello at badawi dot dev, or reach him on WhatsApp or LinkedIn. Let's build it."
+}

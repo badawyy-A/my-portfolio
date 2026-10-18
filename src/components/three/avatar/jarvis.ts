@@ -79,9 +79,6 @@ const T_CLIMB = T_HIDE + HIDE;
 const T_HOP = T_CLIMB + CLIMB;
 const T_TURN = T_HOP + HOP;
 export const T_SEATED = T_TURN + TURN;
-/** he starts waving as he finishes turning, and speaks a moment later */
-export const T_WAVE = T_SEATED - 0.15;
-export const T_GREET = T_SEATED + 0.35;
 
 /**
  * His walk: from far behind Badawi, low in the frame, to out of it at the bottom next to him (avatar

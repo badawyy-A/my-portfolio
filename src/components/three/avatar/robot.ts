@@ -220,6 +220,45 @@ export const moves = {
     head: [-0.1, 0, 0],
   }),
 
+  /** knees bent, arms back: getting ready to jump, or landing */
+  crouch: (): Pose => ({
+    legR: [-0.55, 0, 0],
+    legL: [-0.55, 0, 0],
+    armR: [0.45, 0, -0.2],
+    armL: [0.45, 0, 0.2],
+    chest: [0.3, 0, 0],
+    head: [-0.2, 0, 0],
+    bob: -0.1,
+  }),
+
+  /** in the air: arms up, legs dangling */
+  air: (t: number): Pose => ({
+    armR: [-0.3, 0, -1.25 + Math.sin(t * 20) * 0.1],
+    armL: [-0.3, 0, 1.25 - Math.sin(t * 20) * 0.1],
+    legR: [0.2 + Math.sin(t * 16) * 0.15, 0, -0.08],
+    legL: [-0.2 - Math.sin(t * 16) * 0.15, 0, 0.08],
+    head: [-0.1, 0, 0],
+  }),
+
+  /** presenting what is next to him with his left arm (toward the page), at the start of a line */
+  present: (): Pose => ({
+    armL: [-1.0, 0, 0.75],
+    foreL: [-0.35, 0, 0.15],
+    armR: [0, 0, -0.08],
+    chest: [0, 0.12, 0],
+    head: [0.05, 0.2, 0],
+  }),
+
+  /** talking: small hand gestures with the rhythm of his voice */
+  talk: (t: number, level: number): Pose => ({
+    armR: [-0.2 - 0.35 * level * (0.6 + 0.4 * Math.sin(t * 5.3)), 0, -0.12],
+    armL: [-0.2 - 0.35 * level * (0.6 + 0.4 * Math.sin(t * 4.1 + 1)), 0, 0.12],
+    foreR: [-0.3 * level, 0, 0],
+    foreL: [-0.3 * level, 0, 0],
+    chest: [0.02 + level * 0.04, Math.sin(t * 1.3) * 0.06, 0],
+    head: [-level * 0.15, Math.sin(t * 0.9) * 0.12, Math.sin(t * 0.7) * 0.06],
+  }),
+
   /** waving to the audience with his outer (right) arm, head tilted */
   wave: (t: number): Pose => ({
     armR: [-0.35, 0, -1.45],
@@ -229,3 +268,27 @@ export const moves = {
     head: [0.04, 0.12, 0.12],
   }),
 };
+
+/**
+ * Talking on top of a pose: a gesture as each line starts (a wave for the greeting, presenting the
+ * section for the others), then small hand gestures and nods with his voice.
+ */
+export function speaking(base: Pose, t: number, sinceLine: number, line: string, level: number, talking: boolean): Pose {
+  let pose = talking ? mixPoses(base, moves.talk(t, level), 0.85) : base;
+  const length = line === "hero" ? 2.4 : 1.8;
+  if (sinceLine >= 0 && sinceLine < length) {
+    const gesture = line === "hero" ? moves.wave(sinceLine) : moves.present();
+    pose = mixPoses(pose, gesture, ss(sinceLine, 0, 0.35) * (1 - ss(sinceLine, length - 0.35, length)));
+  }
+  return pose;
+}
+
+/** A jump, `k` from 0 to 1: crouch, push off, arms up in the air, land in a crouch, stand. */
+export function jumping(k: number, t: number): Pose {
+  const { stand, crouch, hop, air } = moves;
+  if (k < 0.2) return mixPoses(stand(t), crouch(), ss(k, 0, 0.2));
+  if (k < 0.32) return mixPoses(crouch(), hop(), (k - 0.2) / 0.12);
+  if (k < 0.82) return mixPoses(hop(), air(t), ss(k, 0.32, 0.5));
+  if (k < 0.92) return mixPoses(air(t), crouch(), (k - 0.82) / 0.1);
+  return mixPoses(crouch(), stand(t), (k - 0.92) / 0.08);
+}

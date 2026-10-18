@@ -9,7 +9,10 @@ import { buildFurniture, type Furniture } from "./avatar/furniture";
 import { crouchIntro, scrollSequence, scrollSequenceMobile, type View } from "./avatar/sequence";
 import { brandShirt } from "./avatar/shirt";
 import { measureMarks, type Marks } from "./avatar/jarvis";
-import Jarvis, { JarvisUI, useLine, type JarvisLink } from "./Jarvis";
+import { Director } from "./avatar/director";
+import { Narrator } from "./avatar/narrator";
+import Jarvis from "./Jarvis";
+import JarvisOverlay from "./JarvisOverlay";
 
 const MODEL = "/models/avatar.glb";
 type Mode = "desktop" | "mobile" | null;
@@ -18,9 +21,9 @@ const bodyQuat = new THREE.Quaternion();
 const pitchAxis = new THREE.Vector3();
 
 
-type AvatarProps = { reduce: boolean; mode: Mode; visible: boolean; link: JarvisLink; onReady: () => void };
+type AvatarProps = { reduce: boolean; mode: Mode; director: Director | null; onReady: () => void };
 
-function Avatar({ reduce, mode, visible, link, onReady }: AvatarProps) {
+function Avatar({ reduce, mode, director, onReady }: AvatarProps) {
   const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
@@ -187,9 +190,9 @@ function Avatar({ reduce, mode, visible, link, onReady }: AvatarProps) {
     <group ref={body}>
       <primitive object={scene} />
       <primitive object={furniture.desk} />
-      {marks && (
+      {marks && director && (
         <Suspense fallback={null}>
-          <Jarvis link={link} marks={marks} look={look} reduce={reduce} mode={mode} visible={visible} onFrame={afterFrame} />
+          <Jarvis director={director} marks={marks} look={look} reduce={reduce} mode={mode} onFrame={afterFrame} />
         </Suspense>
       )}
     </group>
@@ -216,17 +219,21 @@ export default function HeroAvatar() {
   const [reduce, setReduce] = useState(false);
   const [ready, setReady] = useState(false);
   const [mode, setMode] = useState<Mode>(null);
-  const line = useLine();
-  const bubble = useRef<HTMLDivElement>(null);
-  const button = useRef<HTMLButtonElement>(null);
-  const greet = useRef<(() => void) | null>(null);
-  const link: JarvisLink = { bubble, button, greet, line };
+  const [director, setDirector] = useState<Director | null>(null);
 
   useEffect(() => {
-    setSupported(hasWebGL());
+    const webgl = hasWebGL();
+    setSupported(webgl);
     setReduce(prefersReducedMotion());
     const root = document.documentElement.classList;
-    setMode(root.contains("choreo") ? "desktop" : root.contains("choreo-m") ? "mobile" : null);
+    const m = root.contains("choreo") ? "desktop" : root.contains("choreo-m") ? "mobile" : null;
+    setMode(m);
+    // Jarvis, the robot on his shoulder, and his tour of the page
+    if (!webgl) return;
+    const d = new Director(new Narrator(), m);
+    d.start();
+    setDirector(d);
+    return () => d.stop();
   }, []);
 
   const onReady = () => {
@@ -251,11 +258,11 @@ export default function HeroAvatar() {
         >
           <Lights />
           <Suspense fallback={null}>
-            <Avatar reduce={reduce} mode={mode} visible={inView} link={link} onReady={onReady} />
+            <Avatar reduce={reduce} mode={mode} director={director} onReady={onReady} />
           </Suspense>
         </Canvas>
       )}
-      {supported && <JarvisUI link={link} />}
+      {director && <JarvisOverlay director={director} sections={mode !== null} />}
     </div>
   );
 }

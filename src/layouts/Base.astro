@@ -40,7 +40,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <script is:inline define:vars={{ home }}>
       // "js": scripts run, so reveal effects may start hidden.
       // With motion allowed and hardware WebGL, the home page gets the avatar scroll sequence:
-      // "choreo" on large screens (with the loading screen), "choreo-m" on phones and tablets
+      // "choreo" on large screens, "choreo-m" on phones and tablets, both behind the loading screen
       // (skipped on low-memory devices).
       (function () {
         var root = document.documentElement;
@@ -56,7 +56,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           if (!gl) return;
           var lose = gl.getExtension("WEBGL_lose_context");
           if (lose) lose.loseContext();
-          if (small) root.classList.add("choreo-m");
+          if (small) root.classList.add("choreo-m", "loading");
           else root.classList.add("choreo", "loading");
         } catch (e) {}
       })();
