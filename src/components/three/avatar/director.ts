@@ -5,9 +5,10 @@ import type { Narrator } from "./narrator";
  * Jarvis's guided tour of the home page. Watches which section is on screen and decides where he is
  * and what he says:
  * - He rides on Badawi's shoulder while the avatar is on screen (hero, About and What I build on
- *   large screens; the hero on phones), then jumps down onto the heading of each section you scroll
- *   to, and back up when you scroll up. When a long section's heading has scrolled away he stays just
- *   under the site header, so he keeps you company.
+ *   large screens; the hero on phones). In the other sections he always stands on something real:
+ *   arriving in a section he jumps onto its heading; when the page moves his perch so far that he
+ *   would cross under the site header, or slide off the screen, he jumps to the nearest visible
+ *   perch above or below (a title, a card, a timeline row, a tile) with room for him on top.
  * - In each section he says that section's line once. Scrolling on stops him and he starts on the
  *   next section; a line he has (mostly) finished is never repeated, unless the visitor taps him.
  * Without the scroll sequence (reduced motion, smaller devices) he stays in the hero and only greets.
@@ -26,6 +27,40 @@ const SECTIONS = [
 export type SectionId = (typeof SECTIONS)[number]["id"];
 export type Mode = "desktop" | "mobile" | null;
 type Point = { x: number; y: number };
+
+/**
+ * What he can stand on in each section: text (he stands on the letters of its first line) and boxes
+ * (he stands on their top edge). Sections he spends on Badawi's shoulder are skipped.
+ */
+const PERCHES: Partial<Record<SectionId, { text?: string; box?: string }>> = {
+  about: { text: "#about-title, .about-me .para" },
+  services: { text: "#what-title, .what-content h3", box: ".what-content" },
+  process: { text: "#process-title, .step h3", box: ".step" },
+  experience: { text: "#experience-title, .career-info-box h3, .career-info-box .year" },
+  work: { text: "#work-title, .work-box h3, .cta-title", box: ".work-box, .work-image" },
+  stack: { text: "#stack-title", box: ".tile" },
+  contact: { text: "#contact-title, .contact-box h3, .contact-box .credit" },
+};
+/** what he must not stand in front of: the page's text, pictures, tiles and buttons (not the frames around cards) */
+const OBSTACLES = { text: "main :is(h2, h3, p)", box: "main :is(.work-image, .tile, .cta-button)" };
+
+/** The boxes of an element's visible text (leaving out text only there for screen readers). */
+function textRects(el: Element) {
+  const rects: DOMRect[] = [];
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent?.trim() || node.parentElement?.closest(".visually-hidden")) continue;
+    range.selectNodeContents(node);
+    for (const r of range.getClientRects()) if (r.width > 2 && r.height > 2) rects.push(r);
+  }
+  return rects;
+}
+
+/** Something he stands on, and where along it. "fixed" is the sound button, when nothing else is free. */
+type Perch = { el: Element; kind: "text" | "box" | "fixed"; at: "right" | "left" | "middle"; section: SectionId | null };
+type Place = "shoulder" | Perch;
+const same = (a: Place, b: Place) => a === b || (a !== "shoulder" && b !== "shoulder" && a.el === b.el && a.at === b.at);
 
 /** Where the robot on Badawi's shoulder is on screen; the hero canvas writes it every frame. */
 export type HeroReport = { seated: boolean; feet: Point; head: Point; at: number };
@@ -70,8 +105,11 @@ export class Director {
   private greeted = false;
   private speakingFor: SectionId | null = null;
   private activeSince = 0;
-  private place: SectionId | "shoulder" = "shoulder";
-  private jump: { from: Point & { scale: number }; target: SectionId | "shoulder"; start: number } | null = null;
+  private place: Place = "shoulder";
+  private jump: { from: Point & { scale: number }; target: Place; start: number } | null = null;
+  /** the section whose heading he last went to, and when to look around next */
+  private perchFor: SectionId | null = null;
+  private nextLook = 0;
   private lingerUntil = -Infinity;
   private bubbleLine = "";
   private said = -2;
@@ -180,8 +218,124 @@ export class Director {
     return this.heroFresh(t) && this.hero!.feet.y > 0 && this.hero!.head.y < window.innerHeight;
   }
 
+  private headerBottom() {
+    return document.querySelector("header")?.getBoundingClientRect().bottom ?? 76;
+  }
+
+  /** Where his feet go on a perch, or null when it is not on the page right now. */
+  private spot(perch: Perch): Point | null {
+    const size = robotSize();
+    if (perch.kind === "text") {
+      const rects = textRects(perch.el);
+      if (!rects.length) return null;
+      const first = Math.min(...rects.map((r) => r.top));
+      const line = rects.filter((r) => r.top - first < 6);
+      const left = Math.min(...line.map((r) => r.left));
+      const right = Math.max(...line.map((r) => r.right));
+      const x = perch.at === "right" ? right - size * 0.3 : perch.at === "left" ? left + size * 0.3 : (left + right) / 2;
+      return { x: clamp(x, left, Math.max(left, right)), y: first + parseFloat(getComputedStyle(perch.el).fontSize) * 0.2 };
+    }
+    const r = perch.el.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    const x = perch.at === "right" ? r.right - size * 0.6 : perch.at === "left" ? r.left + size * 0.6 : (r.left + r.right) / 2;
+    return { x: clamp(x, r.left, r.right), y: r.top };
+  }
+
+  /** Not faded out (reveal animations) or hidden. */
+  private visible(el: Element) {
+    for (let node: Element | null = el, i = 0; node && i < 5; node = node.parentElement, i++) {
+      const style = getComputedStyle(node);
+      if (Number(style.opacity) < 0.5 || style.visibility === "hidden" || style.display === "none") return false;
+    }
+    return true;
+  }
+
+  /**
+   * Inside the part of the screen where he fits: his head below the site header, his feet on screen
+   * (on phones above the subtitles at the bottom).
+   */
+  private inView(p: Point, margin = 0) {
+    const size = robotSize();
+    const top = this.headerBottom() + size + 4;
+    const bottom = window.innerHeight - (window.innerWidth <= 600 ? 190 : 12);
+    return p.y >= top + margin && p.y <= bottom - margin && p.x >= size * 0.45 && p.x <= window.innerWidth - size * 0.45;
+  }
+
+  /** The text and boxes on screen he must not stand in front of. */
+  private obstacles() {
+    const out: { el: Element; r: DOMRect; text: boolean }[] = [];
+    const onScreen = (r: DOMRect) => r.bottom > 0 && r.top < window.innerHeight && r.width > 0;
+    for (const el of document.querySelectorAll(OBSTACLES.text)) {
+      const rects = textRects(el);
+      if (!rects.length) continue;
+      const left = Math.min(...rects.map((q) => q.left));
+      const top = Math.min(...rects.map((q) => q.top));
+      const r = new DOMRect(left, top, Math.max(...rects.map((q) => q.right)) - left, Math.max(...rects.map((q) => q.bottom)) - top);
+      if (onScreen(r)) out.push({ el, r, text: true });
+    }
+    for (const el of document.querySelectorAll(OBSTACLES.box)) {
+      const r = el.getBoundingClientRect();
+      if (onScreen(r)) out.push({ el, r, text: false });
+    }
+    return out;
+  }
+
+  /**
+   * Room for his body above that spot: nothing else of the page behind him. No text behind any of
+   * him; the round top of his helmet may touch the edge of a picture or a tile.
+   */
+  private roomAt(p: Point, perch: Perch, obstacles: { el: Element; r: DOMRect; text: boolean }[]) {
+    const size = robotSize();
+    const left = p.x - size * 0.34;
+    const right = p.x + size * 0.34;
+    const bottom = p.y - 3;
+    return !obstacles.some(({ el, r, text }) => {
+      if (el === perch.el || el.contains(perch.el) || perch.el.contains(el)) return false;
+      const top = p.y - size * (text ? 0.97 : 0.82);
+      // a few pixels of touching are fine
+      return r.left < right - 4 && r.right > left + 4 && r.top < bottom - 4 && r.bottom > top + 4;
+    });
+  }
+
+  /**
+   * Where to stand next: arriving in a section, its heading (else the nearest perch in it);
+   * otherwise the nearest perch on screen with room for him; the sound button if there is none.
+   */
+  private choose(section: SectionId | null, from: Point, margin = 30): Perch | null {
+    const obstacles = this.obstacles();
+    const options: { perch: Perch; dist: number }[] = [];
+    for (const [id, sel] of Object.entries(PERCHES) as [SectionId, { text?: string; box?: string }][]) {
+      if (this.onShoulder(id)) continue;
+      for (const kind of ["text", "box"] as const) {
+        if (!sel[kind]) continue;
+        for (const el of document.querySelectorAll(sel[kind]!)) {
+          if (!this.visible(el)) continue;
+          for (const at of kind === "text" ? (["right", "left"] as const) : (["right", "left", "middle"] as const)) {
+            const perch: Perch = { el, kind, at, section: id };
+            const p = this.spot(perch);
+            if (p && this.inView(p, margin) && this.roomAt(p, perch, obstacles)) options.push({ perch, dist: Math.hypot(p.x - from.x, (p.y - from.y) * 1.2) });
+          }
+        }
+      }
+    }
+    let pool = options;
+    if (section) {
+      const inSection = options.filter((o) => o.perch.section === section);
+      const heading = SECTIONS.find((s) => s.id === section)!.heading;
+      const onHeading = heading && inSection.find((o) => o.perch.el.matches(heading));
+      if (onHeading) return onHeading.perch;
+      if (inSection.length) pool = inSection;
+    }
+    pool.sort((a, b) => a.dist - b.dist);
+    if (pool[0]) return pool[0].perch;
+    // nothing with room to spare: anything that still fits, then the sound button
+    if (margin > 0) return this.choose(section, from, 0);
+    const sound = document.querySelector(".jarvis-sound");
+    return sound ? { el: sound, kind: "fixed", at: "middle", section: null } : null;
+  }
+
   /** Where he stands for a place: feet on screen, and size relative to the section robot. */
-  private anchor(place: SectionId | "shoulder", t: number) {
+  private where(place: Place, t: number) {
     const size = robotSize();
     if (place === "shoulder") {
       // the seat on Badawi's shoulder; when the avatar is off screen, somewhere above the top
@@ -191,68 +345,70 @@ export class Director {
       }
       return { x: this.hero?.feet.x ?? window.innerWidth * 0.4, y: -size * 1.5, scale: 1 };
     }
-    const heading = document.querySelector<HTMLElement>(SECTIONS.find((s) => s.id === place)!.heading);
-    const top = this.headerBottom() + size + 6;
-    if (!heading) return { x: window.innerWidth / 2, y: top, scale: 1 };
-    // on top of the last letters of the heading's first line
-    const range = document.createRange();
-    range.selectNodeContents(heading);
-    const rects = [...range.getClientRects()].filter((r) => r.width > 2 && r.height > 2);
-    const first = Math.min(...rects.map((r) => r.top));
-    const line = rects.filter((r) => r.top - first < 6);
-    const right = Math.max(...line.map((r) => r.right));
-    const fontSize = parseFloat(getComputedStyle(heading).fontSize);
-    return {
-      x: clamp(right - size * 0.3, size * 0.6, window.innerWidth - size * 0.6),
-      y: clamp(first + fontSize * 0.2, top, window.innerHeight - 20),
-      scale: 1,
-    };
-  }
-
-  private headerBottom() {
-    return document.querySelector("header")?.getBoundingClientRect().bottom ?? 76;
+    const p = this.spot(place) ?? { x: this.robot.x, y: this.robot.y };
+    return { ...p, scale: 1 };
   }
 
   private move(t: number) {
     if (this.mode === null) return;
-    const want = this.onShoulder(this.active) ? "shoulder" : this.active;
+    const shoulder = this.onShoulder(this.active);
     // he waits on the shoulder until his entrance has brought him there
-    if (want !== "shoulder" && this.place === "shoulder" && !this.jump && this.hero && !this.hero.seated) this.skipEntrance = true;
-    if ((this.jump ? this.jump.target : this.place) !== want) {
-      const from = this.jump || this.place !== "shoulder" ? { x: this.robot.x, y: this.robot.y, scale: this.robot.scale } : this.anchor("shoulder", t);
-      this.jump = { from, target: want, start: t };
+    if (!shoulder && this.place === "shoulder" && !this.jump && this.hero && !this.hero.seated) this.skipEntrance = true;
+
+    const target = this.jump ? this.jump.target : this.place;
+    let next: Place | null = null;
+    if (shoulder) {
+      if (target !== "shoulder") next = "shoulder";
+    } else if (t >= this.nextLook) {
+      const from = this.robot.shown ? { x: this.robot.x, y: this.robot.y } : this.where("shoulder", t);
+      if (target === "shoulder" || this.perchFor !== this.active) {
+        // arriving in a section: onto its heading if he can stand there
+        next = this.choose(this.active, from);
+        if (next) this.perchFor = this.active;
+      } else if (target.kind === "fixed" || !this.visible(target.el) || !this.inView(this.spot(target) ?? { x: -1, y: -1 })) {
+        // his perch is taking him under the header or off the screen (or he is making do with the
+        // sound button): the nearest perch, above or below
+        next = this.choose(null, from);
+      }
+      if (next && same(next, target)) next = null;
+      this.nextLook = t + (target !== "shoulder" && target.kind === "fixed" ? 0.5 : 0.12);
+    }
+
+    if (next) {
+      const from = this.jump || this.place !== "shoulder" ? { x: this.robot.x, y: this.robot.y, scale: this.robot.scale } : this.where("shoulder", t);
+      this.jump = { from, target: next, start: t };
       this.heroShown = false;
       this.robot.shown = true;
     }
 
     if (this.jump) {
-      const { from, target, start } = this.jump;
+      const { from, target: to, start } = this.jump;
       const k = (t - start) / JUMP;
-      const to = this.anchor(target, t);
+      const at = this.where(to, t);
       if (k >= 1) {
         this.jump = null;
-        this.place = target;
+        this.place = to;
         this.robot.jump = -1;
-        if (target === "shoulder") {
+        if (to === "shoulder") {
           this.heroShown = true;
           this.robot.shown = false;
         }
       } else {
         // crouch, leap in an arc (grows with the distance), land
         const u = ease(clamp((k - 0.2) / 0.65, 0, 1));
-        const arc = 50 + Math.abs(to.x - from.x) * 0.25;
+        const arc = 50 + Math.abs(at.x - from.x) * 0.25;
         Object.assign(this.robot, {
-          x: lerp(from.x, to.x, u),
-          y: lerp(from.y, to.y, u) - Math.sin(Math.PI * u) * arc,
-          scale: lerp(from.scale, to.scale, u),
+          x: lerp(from.x, at.x, u),
+          y: lerp(from.y, at.y, u) - Math.sin(Math.PI * u) * arc,
+          scale: lerp(from.scale, at.scale, u),
           jump: k,
-          dir: Math.sign(to.x - from.x),
+          dir: Math.sign(at.x - from.x),
         });
         return;
       }
     }
     if (this.place !== "shoulder") {
-      const at = this.anchor(this.place, t);
+      const at = this.where(this.place, t);
       // turned a little toward the middle of the page
       Object.assign(this.robot, { x: at.x, y: at.y, scale: 1, yaw: clamp((window.innerWidth / 2 - at.x) / window.innerWidth, -0.45, 0.45) });
     }
@@ -341,10 +497,14 @@ export class Director {
     } else {
       y = clamp(mid - h / 2, top, window.innerHeight - h - 8);
       tail = clamp(mid - y, 16, h - 16);
-      if (feet!.x + r + 14 + w <= window.innerWidth - 12) {
+      // away from what he stands on: standing at the left end of a title, the bubble opens to the left
+      const fitsRight = feet!.x + r + 14 + w <= window.innerWidth - 12;
+      const fitsLeft = feet!.x - r - 14 - w >= 12;
+      const preferLeft = this.place !== "shoulder" && this.place.at === "left";
+      if (fitsRight && !(preferLeft && fitsLeft)) {
         side = "right";
         x = feet!.x + r + 14;
-      } else if (feet!.x - r - 14 - w >= 12) {
+      } else if (fitsLeft) {
         side = "left";
         x = feet!.x - r - 14 - w;
       } else {
