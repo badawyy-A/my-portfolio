@@ -16,6 +16,12 @@ const social = [
   { label: "WhatsApp", href: links.whatsapp },
 ];
 const year = new Date().getFullYear();
+// the 3D robot on Badawi's shoulder is CC BY 4.0, which asks for a visible credit
+const ROBOT = {
+  source: "https://sketchfab.com/3d-models/cartoon-robot-43e3e1a1d00a4f0ba5fdfff7aef26230",
+  author: "alexandermadrews",
+  license: "https://creativecommons.org/licenses/by/4.0/",
+};
 ---
 
 <section class="contact-section section-container" id="contact" aria-labelledby="contact-title">
@@ -38,6 +44,10 @@ const year = new Date().getFullYear();
     <div class="contact-box" data-reveal>
       <p class="credit">AI &amp; full-stack engineer<br /><span>Badawi</span></p>
       <p class="mono copy">&copy; {year} Badawi &middot; {location}</p>
+      <p class="mono copy model">
+        Jarvis is <a href={ROBOT.source} {...newTab()}>Cartoon Robot<NewTabNote /></a> by {ROBOT.author}, rigged and
+        animated for this site, license <a href={ROBOT.license} {...newTab("license")}>CC BY 4.0<NewTabNote /></a>
+      </p>
     </div>
   </div>
 </section>
@@ -127,6 +137,19 @@ const year = new Date().getFullYear();
   .copy {
     margin-top: 10px;
     color: var(--muted);
+  }
+
+  .model {
+    max-width: 36ch;
+  }
+
+  .copy a {
+    color: inherit;
+    text-underline-offset: 2px;
+  }
+
+  .copy a:hover {
+    color: var(--accent);
   }
 
   @media (min-width: 600px) {

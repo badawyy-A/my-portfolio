@@ -34,3 +34,12 @@ SOFTWARE.
 
 The GitHub, LinkedIn and WhatsApp icon paths in `src/components/Icon.astro` come from
 Simple Icons (https://simpleicons.org), CC0 1.0. The brands' trademarks belong to their owners.
+
+## Cartoon Robot by alexandermadrews
+
+Jarvis, the robot that climbs onto the avatar's shoulder (`public/models/robot.glb`), is
+"Cartoon Robot" by alexandermadrews
+(https://sketchfab.com/3d-models/cartoon-robot-43e3e1a1d00a4f0ba5fdfff7aef26230), licensed under
+Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/). Changes: simplified
+and compressed, re-oriented, an emissive map added for the eyes, and rigged and animated in code
+(`src/components/three/avatar/robot.ts`). The credit is also shown on the home page, under Contact.
