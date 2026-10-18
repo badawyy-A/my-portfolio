@@ -2,6 +2,7 @@
 // Fixed page furniture: edge glows, custom cursor, social column (left), corner caption (right).
 import Icon from "./Icon.astro";
 import { getSite } from "../lib/content";
+import { NEW_TAB_NOTE, newTab } from "../lib/links";
 
 interface Props {
   caption?: boolean;
@@ -24,7 +25,12 @@ const social = [
   <ul class="social" data-cursor="icons">
     {social.map((item) => (
       <li>
-        <a href={item.href} aria-label={item.label} rel={item.icon === "email" ? undefined : "me noopener"}>
+        <a
+          href={item.href}
+          aria-label={`${item.label} ${NEW_TAB_NOTE}`}
+          {...newTab}
+          rel={item.icon === "email" ? newTab.rel : `me ${newTab.rel}`}
+        >
           <Icon name={item.icon} size={22} />
         </a>
       </li>

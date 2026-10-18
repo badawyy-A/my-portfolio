@@ -1,6 +1,8 @@
 ---
 import Icon from "./Icon.astro";
+import NewTabNote from "./NewTabNote.astro";
 import type { Links } from "../lib/content";
+import { newTab } from "../lib/links";
 
 interface Props {
   line: string;
@@ -21,15 +23,15 @@ const year = new Date().getFullYear();
   <div class="contact-flex">
     <div class="contact-box" data-reveal>
       <h3>Email</h3>
-      <p class="email"><a href={`mailto:${links.email}`}>{links.email}</a></p>
+      <p class="email"><a href={`mailto:${links.email}`} {...newTab}>{links.email}<NewTabNote /></a></p>
       <h3>Location</h3>
       <p>{location}</p>
     </div>
     <div class="contact-box" data-reveal>
       <h3>Social</h3>
       {social.map((item) => (
-        <a class="social" href={item.href} rel="me noopener">
-          {item.label} <Icon name="arrow" size={18} />
+        <a class="social" href={item.href} {...newTab} rel={`me ${newTab.rel}`}>
+          {item.label} <Icon name="arrow" size={18} /><NewTabNote />
         </a>
       ))}
     </div>

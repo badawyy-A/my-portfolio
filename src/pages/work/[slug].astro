@@ -4,6 +4,8 @@ import Base from "../../layouts/Base.astro";
 import SceneFrame from "../../components/SceneFrame.astro";
 import FlowDiagram from "../../components/FlowDiagram.astro";
 import Text from "../../components/Text.astro";
+import NewTabNote from "../../components/NewTabNote.astro";
+import { newTab } from "../../lib/links";
 import { getProjects } from "../../lib/content";
 
 export async function getStaticPaths() {
@@ -19,7 +21,7 @@ const { Content } = await render(project);
 <Base title={`${title} · Badawi`} description={summary}>
   <article class="project">
     <header class="container intro">
-      <a class="mono back" href="/#work">← All work</a>
+      <a class="mono back" href="/#work" {...newTab}>← All work<NewTabNote /></a>
       <p class="mono stack">{stack.join(" · ")}</p>
       <h1>{title}</h1>
       <p class="summary">{summary}</p>
