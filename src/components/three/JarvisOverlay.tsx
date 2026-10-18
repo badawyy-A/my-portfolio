@@ -39,7 +39,7 @@ export default function JarvisOverlay({ director, sections }: { director: Direct
 function JarvisUI({ director }: { director: Director }) {
   useNarrator(director);
   const bubble = useRef<HTMLDivElement>(null);
-  const button = useRef<HTMLButtonElement>(null);
+  const button = useRef<HTMLAnchorElement>(null);
   const shown = useRef("");
   const { narrator } = director;
   if (narrator.current) shown.current = narrator.current.id;
@@ -64,7 +64,8 @@ function JarvisUI({ director }: { director: Director }) {
           </span>
         )}
       </div>
-      <button ref={button} type="button" className="jarvis-hit" hidden onClick={() => director.explain()} aria-label="Ask Jarvis about this section" />
+      {/* tapping him opens his chat page (in a new tab, like every link that leaves the page) */}
+      <a ref={button} className="jarvis-hit" href="/jarvis/" target="_blank" rel="noopener" hidden aria-label="Talk to Jarvis (opens in a new tab)" />
       <button
         type="button"
         className="jarvis-sound"

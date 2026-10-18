@@ -1,0 +1,252 @@
+---
+// Jarvis on his own: a live chat about Badawi and about what it takes to build software (requested
+// by Badawi on 2026-10-18). The chat runs on an ElevenLabs agent; see scripts/jarvis/agent.mjs.
+import Base from "../layouts/Base.astro";
+import JarvisChat from "../components/three/JarvisChat";
+---
+
+<Base title="Talk to Jarvis · Badawi" description="Ask Jarvis, Badawi's assistant, about his work and career, or about what it takes to build your idea.">
+  <section class="jarvis container">
+    <header class="intro">
+      <h1>Talk to <span>Jarvis</span></h1>
+      <p class="lead">Ask about Badawi's work and career, or about what it would take to build your idea. Jarvis keeps to those topics.</p>
+    </header>
+    <JarvisChat client:load />
+    <noscript><p class="lead">Jarvis needs JavaScript. You can email Badawi at hello@badawi.dev.</p></noscript>
+    <p class="mono privacy">
+      Jarvis runs on ElevenLabs. Your voice isn't kept; chat transcripts are kept for 30 days so Badawi can see what people ask.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .jarvis {
+    padding-top: 130px;
+    padding-bottom: 60px;
+  }
+
+  /* phones: below the taller, stacked header */
+  @media (max-width: 600px) {
+    .jarvis {
+      padding-top: 175px;
+    }
+  }
+
+  .intro {
+    max-width: 40rem;
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-size: clamp(2.6rem, 6vw, 5rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .lead {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: var(--text-lg);
+  }
+
+  .privacy {
+    max-width: 44rem;
+    margin-top: 22px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: none;
+  }
+
+  /* the chat island */
+  .jarvis :global(.jc) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .jarvis :global(.jc-stage) {
+    position: relative;
+    height: 36vh;
+    min-height: 240px;
+    border-radius: 18px;
+    background: radial-gradient(60% 60% at 50% 60%, rgb(107 20 39 / 0.35), transparent 70%);
+  }
+
+  .jarvis :global(.jc-panel) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--surface);
+  }
+
+  .jarvis :global(.jc-bar) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 32px;
+  }
+
+  .jarvis :global(.jc-status) {
+    color: var(--accent);
+  }
+
+  .jarvis :global(.jc-sound) {
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .jarvis :global(.jc-sound[aria-pressed="true"]) {
+    border-color: rgb(217 69 95 / 0.45);
+    color: var(--fg);
+  }
+
+  .jarvis :global(.jc-log) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 42vh;
+    min-height: 260px;
+    margin: 12px 0;
+    padding: 4px 4px 4px 0;
+    overflow-y: auto;
+    list-style: none;
+    overscroll-behavior: contain;
+  }
+
+  .jarvis :global(.jc-turn) {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgb(237 230 227 / 0.05);
+    line-height: 1.45;
+  }
+
+  .jarvis :global(.jc-turn.is-user) {
+    align-self: flex-end;
+    background: rgb(107 20 39 / 0.45);
+  }
+
+  .jarvis :global(.jc-who) {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  /* a lighter rose than the accent: the label is small, and needs 4.5:1 on the bubble */
+  .jarvis :global(.jc-turn.is-agent .jc-who) {
+    color: #f08ea0;
+  }
+
+  .jarvis :global(.jc-dots) {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .jarvis :global(.jc-dots span) {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: jc-dot 1s infinite ease-in-out;
+  }
+
+  .jarvis :global(.jc-dots span:nth-child(2)) {
+    animation-delay: 0.15s;
+  }
+
+  .jarvis :global(.jc-dots span:nth-child(3)) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes jc-dot {
+    50% {
+      opacity: 0.3;
+      translate: 0 -3px;
+    }
+  }
+
+  .jarvis :global(.jc-form) {
+    display: flex;
+    gap: 8px;
+  }
+
+  .jarvis :global(.jc-form input) {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--fg);
+    font: inherit;
+  }
+
+  .jarvis :global(.jc-form input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .jarvis :global(.jc-send) {
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--accent);
+    color: var(--bg);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .jarvis :global(.jc-send:disabled) {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .jarvis :global(.jc-send:focus-visible),
+  .jarvis :global(.jc-sound:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .jarvis :global(.jc-note) {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+
+  @media (min-width: 900px) {
+    .jarvis :global(.jc) {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      align-items: stretch;
+    }
+
+    .jarvis :global(.jc-stage) {
+      height: auto;
+      min-height: 560px;
+    }
+
+    .jarvis :global(.jc-log) {
+      height: 420px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .jarvis :global(.jc-dots span) {
+      animation: none;
+    }
+  }
+</style>

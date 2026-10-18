@@ -10,7 +10,7 @@ import type { Narrator } from "./narrator";
  *   would cross under the site header, or slide off the screen, he jumps to the nearest visible
  *   perch above or below (a title, a card, a timeline row, a tile) with room for him on top.
  * - In each section he says that section's line once. Scrolling on stops him and he starts on the
- *   next section; a line he has (mostly) finished is never repeated, unless the visitor taps him.
+ *   next section; a line he has (mostly) finished is never repeated. Tapping him opens his chat.
  * Without the scroll sequence (reduced motion, smaller devices) he stays in the hero and only greets.
  */
 
@@ -109,7 +109,7 @@ export class Director {
   /** how loud he is right now (0 to 1), measured once per frame for both robots */
   level = 0;
   active: SectionId = "hero";
-  ui: { bubble?: HTMLElement | null; button?: HTMLButtonElement | null } = {};
+  ui: { bubble?: HTMLElement | null; button?: HTMLElement | null } = {};
 
   private narrated = new Set<SectionId>();
   private greeted = false;
@@ -132,6 +132,8 @@ export class Director {
   ) {}
 
   start() {
+    // he stops talking while the visitor is in another tab (his chat page, for one)
+    document.addEventListener("visibilitychange", this.onHidden);
     const loop = () => {
       this.tick();
       this.raf = requestAnimationFrame(loop);
@@ -141,13 +143,16 @@ export class Director {
 
   stop() {
     cancelAnimationFrame(this.raf);
+    document.removeEventListener("visibilitychange", this.onHidden);
     this.narrator.stop();
   }
 
-  /** The visitor tapped Jarvis: explain the section on screen again (or greet again). */
-  explain() {
-    this.speak(this.mode === null ? "hero" : this.active);
-  }
+  private onHidden = () => {
+    if (!document.hidden || !this.speakingFor) return;
+    if (this.narrator.stop() >= HEARD) this.narrated.add(this.speakingFor);
+    this.speakingFor = null;
+    this.lingerUntil = -Infinity;
+  };
 
   /** True while a line is being said (the robots talk with their hands). */
   get talking() {
