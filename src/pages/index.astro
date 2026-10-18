@@ -7,6 +7,7 @@ import Services from "../components/Services.astro";
 import Process from "../components/Process.astro";
 import Experience from "../components/Experience.astro";
 import Work from "../components/Work.astro";
+import Stack from "../components/Stack.astro";
 import Contact from "../components/Contact.astro";
 import HeroAvatar from "../components/three/HeroAvatar";
 import { getSite } from "../lib/content";
@@ -24,6 +25,7 @@ const site = await getSite();
   <Process steps={site.process} />
   <Experience items={site.experience} />
   <Work />
+  <Stack tools={site.stack} />
   <Contact line={site.contactLine} links={site.links} location={site.location} />
 </Base>
 

@@ -1,0 +1,339 @@
+---
+// Tech stack, after the reference site: tools as an inverted pyramid of tiles. Logos are Simple Icons
+// (CC0) inlined at build time, cream by default and in the brand's own colour on hover.
+import * as icons from "simple-icons";
+import NewTabNote from "./NewTabNote.astro";
+import { newTab } from "../lib/links";
+
+interface Props {
+  tools: { name: string; icon?: string; url: string }[];
+}
+const { tools } = Astro.props;
+
+type SimpleIcon = { title: string; path: string; hex: string };
+const lookup = (slug: string) => {
+  const icon = (icons as Record<string, unknown>)[`si${slug[0].toUpperCase()}${slug.slice(1)}`] as SimpleIcon | undefined;
+  if (!icon) throw new Error(`site.yaml stack: no Simple Icons logo with slug "${slug}" (see simpleicons.org)`);
+  return icon;
+};
+
+// brand colours that would vanish on the near-black background are lightened until they read
+const channel = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+const luminance = (rgb: number[]) => 0.2126 * channel(rgb[0] / 255) + 0.7152 * channel(rgb[1] / 255) + 0.0722 * channel(rgb[2] / 255);
+const BG = luminance([10, 7, 8]);
+function readable(hex: string) {
+  let rgb = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  for (let step = 0; step < 10 && (luminance(rgb) + 0.05) / (BG + 0.05) < 4; step++) {
+    rgb = rgb.map((c) => Math.round(c + (255 - c) * 0.15));
+  }
+  return `rgb(${rgb.join(" ")})`;
+}
+
+// "InsightFace" -> "IF", "llama-index" -> "LI"
+const initials = (name: string) =>
+  name
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .split(/[\s-]+/)
+    .map((word) => word[0].toUpperCase())
+    .join("")
+    .slice(0, 2);
+
+const items = tools.map((tool) => {
+  const icon = tool.icon ? lookup(tool.icon) : undefined;
+  return { ...tool, path: icon?.path, color: icon ? readable(icon.hex) : "var(--accent)" };
+});
+
+// inverted pyramid: each row one tile shorter than the one above, four rows for the current list
+const rows: (typeof items)[] = [];
+let width = Math.max(1, Math.ceil((items.length + 6) / 4));
+for (let i = 0; i < items.length; width = Math.max(1, width - 1)) {
+  rows.push(items.slice(i, i + width));
+  i += width;
+}
+---
+
+<section class="techstack" id="stack" aria-labelledby="stack-title">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="content">
+    <h2 id="stack-title">Tech stack</h2>
+    <!-- one list of tools; the hidden breaks end each pyramid row (phones drop them and use a grid) -->
+    <ul class="pyramid" data-frames>
+      {rows.map((row, r) => (
+        <>
+          {r > 0 && <li class="break" aria-hidden="true" />}
+          {row.map((tool, t) => (
+            <li class="tool" style={`--brand: ${tool.color}; --delay: ${(r * 0.08 + t * 0.03).toFixed(2)}s`}>
+              <a class="tile" href={tool.url} title={tool.name} {...newTab()}>
+                {tool.path ? (
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d={tool.path} />
+                  </svg>
+                ) : (
+                  <span class="mark" aria-hidden="true">{initials(tool.name)}</span>
+                )}
+                <span class="name">{tool.name}</span>
+                <NewTabNote />
+              </a>
+            </li>
+          ))}
+        </>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .techstack {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 120px 0;
+    overflow: hidden;
+  }
+
+  /* two soft burgundy glows behind the pyramid */
+  .glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(40% 50% at 22% 55%, rgb(107 20 39 / 0.22), transparent 70%),
+      radial-gradient(40% 50% at 78% 45%, rgb(107 20 39 / 0.18), transparent 70%);
+    pointer-events: none;
+  }
+
+  .content {
+    position: relative;
+    width: 100%;
+    max-width: 1000px;
+    padding-inline: 20px;
+  }
+
+  h2 {
+    margin-bottom: 56px;
+    background: linear-gradient(180deg, var(--fg) 0%, var(--accent) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-size: 70px;
+    font-weight: 500;
+    line-height: 1;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .pyramid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .break {
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 92px;
+    height: 92px;
+    padding: 10px 6px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgb(237 230 227 / 0.03);
+    color: var(--fg);
+    text-decoration: none;
+    transition:
+      translate 0.3s var(--ease-out),
+      scale 0.3s var(--ease-out),
+      border-color 0.3s var(--ease-out),
+      background-color 0.3s var(--ease-out),
+      box-shadow 0.3s var(--ease-out);
+  }
+
+  svg {
+    width: 32px;
+    height: 32px;
+    fill: currentColor;
+    opacity: 0.85;
+    transition:
+      fill 0.3s var(--ease-out),
+      opacity 0.3s var(--ease-out);
+  }
+
+  .mark {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    opacity: 0.85;
+    transition:
+      color 0.3s var(--ease-out),
+      opacity 0.3s var(--ease-out);
+  }
+
+  /* long names ("GitHub Actions") wrap onto a second line */
+  .name {
+    max-width: 100%;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.15;
+    text-align: center;
+    overflow-wrap: anywhere;
+    transition: color 0.3s var(--ease-out);
+  }
+
+  .tile:hover,
+  .tile:focus-visible {
+    border-color: var(--brand);
+    background-color: rgb(107 20 39 / 0.16);
+    box-shadow: 0 8px 30px rgb(217 69 95 / 0.18);
+    translate: 0 -6px;
+    scale: 1.06;
+  }
+
+  .tile:hover svg,
+  .tile:focus-visible svg {
+    fill: var(--brand);
+    opacity: 1;
+  }
+
+  .tile:hover .mark,
+  .tile:focus-visible .mark {
+    color: var(--brand);
+    opacity: 1;
+  }
+
+  .tile:hover .name,
+  .tile:focus-visible .name {
+    color: var(--fg);
+  }
+
+  /* tiles rise in row by row when the section reaches the screen */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.js) .tool {
+      opacity: 0;
+    }
+
+    .pyramid:global(.is-in) .tool {
+      animation: tile-in 0.6s var(--ease-out) var(--delay) forwards;
+    }
+  }
+
+  @keyframes tile-in {
+    from {
+      opacity: 0;
+      translate: 0 18px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile {
+      transition: none;
+    }
+
+    .tile:hover,
+    .tile:focus-visible {
+      translate: none;
+      scale: none;
+    }
+  }
+
+  @media (max-width: 1200px) {
+    .tile {
+      width: 82px;
+      height: 82px;
+    }
+
+    svg,
+    .mark {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .techstack {
+      min-height: 0;
+      padding: 90px 0;
+    }
+
+    h2 {
+      margin-bottom: 40px;
+      font-size: 50px;
+    }
+
+    .pyramid {
+      gap: 10px;
+    }
+
+    .tile {
+      width: 70px;
+      height: 70px;
+      gap: 6px;
+      border-radius: 10px;
+    }
+
+    svg,
+    .mark {
+      width: 24px;
+      height: 24px;
+    }
+
+    .mark {
+      font-size: 15px;
+    }
+
+    .name {
+      font-size: 10px;
+    }
+  }
+
+  /* phones: an even grid, four tiles per row, labels stay readable */
+  @media (max-width: 600px) {
+    h2 {
+      font-size: 38px;
+    }
+
+    .techstack {
+      padding-top: 120px;
+    }
+
+    .pyramid {
+      gap: 8px;
+      max-width: 360px;
+      margin-inline: auto;
+    }
+
+    .break {
+      display: none;
+    }
+
+    .tool {
+      width: calc((100% - 3 * 8px) / 4);
+    }
+
+    .tile {
+      width: 100%;
+      height: 80px;
+    }
+  }
+</style>
