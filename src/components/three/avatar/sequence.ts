@@ -11,6 +11,7 @@ gsap.registerPlugin(ScrollTrigger);
  * an extra head nod and the laptop screen brightness. While `scripted` is 1 the head ignores the mouse.
  */
 export type View = {
+  dx: number;
   dz: number;
   dy: number;
   dlook: number;
@@ -66,10 +67,12 @@ export function scrollSequence(body: THREE.Object3D, view: View, furniture: Furn
 }
 
 /**
- * Phones and tablets: the avatar stays at the top of the screen, turns and steps back while the
- * About text scrolls up under it, then lifts away.
+ * Phones and tablets: the same scenes as large screens, stacked for a tall screen. The avatar stays in
+ * the top part while the text arrives below him: he turns toward the About text and steps back; then
+ * the camera pulls back while the desk and laptop rise in and he sits down and types, with the
+ * "What I build" title coming up underneath; then he lifts away as the cards follow.
  */
-export function scrollSequenceMobile(body: THREE.Object3D, view: View) {
+export function scrollSequenceMobile(body: THREE.Object3D, view: View, furniture: Furniture, drop: number) {
   const stage = document.querySelector<HTMLElement>(".stage");
   if (!stage) return;
 
@@ -77,12 +80,24 @@ export function scrollSequenceMobile(body: THREE.Object3D, view: View) {
     .timeline({ scrollTrigger: { trigger: ".landing", start: "top top", end: "bottom top", ...scrub } })
     .fromTo(body.rotation, { y: 0 }, { y: 0.35, duration: 1 }, 0)
     .fromTo(view, { dz: 0 }, { dz: 0.45, duration: 1 }, 0)
-    .fromTo(stage, { yPercent: 0 }, { yPercent: -10, duration: 1 }, 0)
     .to(".landing-container", { opacity: 0, duration: 0.35 }, 0.25);
 
   gsap
-    .timeline({ scrollTrigger: { trigger: ".about-section", start: "center 70%", end: "bottom top", ...scrub } })
-    .to(stage, { yPercent: -110, duration: 1, ease: "none" }, 0);
+    .timeline({ scrollTrigger: { trigger: ".about-section", start: "center 60%", end: "bottom top", ...scrub } })
+    // pulled further back than on large screens, and over toward the desk, so it all fits the narrow frame
+    .to(view, { dx: 0.2, dz: 3.6, dy: 0.32 - drop, dlook: -0.62 - drop, duration: 6, delay: 1, ease: "power3.inOut" }, 0)
+    .to(body.rotation, { y: 0.6, delay: 2, duration: 3 }, 0)
+    .fromTo(furniture.desk.position, { y: -1.6 }, { y: 0, duration: 3, delay: 1.5, ease: "power2.out" }, 0)
+    .fromTo(view, { sit: 0 }, { sit: 1, duration: 2.2, delay: 2.6, ease: "power2.inOut" }, 0)
+    .fromTo(view, { typing: 0 }, { typing: 1, duration: 2.5, delay: 3.4 }, 0)
+    .fromTo(view, { screen: 0 }, { screen: 1, duration: 0.8, delay: 4.6 }, 0)
+    .fromTo(".rim-wrap", { opacity: 1 }, { opacity: 0, duration: 4, delay: 2 }, 0);
+
+  // the About text is read below him, and fades as it rises into the scene
+  gsap.fromTo(".about-me", { opacity: 1 }, { opacity: 0, ease: "none", scrollTrigger: { trigger: ".about-me", start: "top 50%", end: "top 20%", ...scrub } });
+
+  // he lifts away as the What I build cards come up, so they never cover the scene
+  gsap.fromTo(stage, { yPercent: 0 }, { yPercent: -110, ease: "none", scrollTrigger: { trigger: ".what-box-in", start: "top bottom", end: "top 35%", ...scrub } });
 
   ScrollTrigger.refresh();
 }

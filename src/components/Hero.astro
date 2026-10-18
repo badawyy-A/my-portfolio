@@ -205,9 +205,14 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
   :global(.jarvis-bubble[data-side="caption"]) {
     width: calc(100vw - 24px);
     max-width: none;
+    background: rgb(20 12 14 / 0.98);
   }
 
   :global(.jarvis-bubble[data-side="caption"])::after {
+    display: none;
+  }
+
+  :global(.jarvis-bubble[data-side="caption"] [data-word]:not(.in-sentence)) {
     display: none;
   }
 
@@ -459,6 +464,21 @@ const phraseList = phrases.slice(0, -1).join(", ") + " and " + phrases.at(-1);
 
     .rim {
       top: 20%;
+      opacity: 0.7;
+      transform: translate(-50%, 30%) scale(0.95);
+    }
+
+    /* with the scroll sequence the glow rises once the loading screen is gone, as on large screens */
+    :global(html.choreo-m) .rim {
+      opacity: 0;
+      transform: translate(-50%, 80%) scale(0.95);
+      transition:
+        opacity 2s var(--ease-out) 0.2s,
+        transform 2s var(--ease-out) 0.2s;
+    }
+
+    :global(html.choreo-m:not(.loading)) [data-avatar="ready"] .rim,
+    :global(html.choreo-m:not(.loading) [data-avatar="ready"]) .rim {
       opacity: 0.7;
       transform: translate(-50%, 30%) scale(0.95);
     }

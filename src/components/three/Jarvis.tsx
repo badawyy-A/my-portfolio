@@ -8,8 +8,8 @@ import { FACE_YAW, ROBOT_HEIGHT, T_SEATED, entrance, siteReadyAt, type Marks } f
 import type { Director } from "./avatar/director";
 
 export const ROBOT_MODEL = "/models/robot.glb";
-/** after the loading screen opens he sets off this long later: on large screens while Badawi rises */
-const LEAD = { desktop: 2.2, mobile: 0.6 };
+/** after the loading screen opens he sets off this long later, while Badawi rises from his crouch */
+const LEAD = { desktop: 2.2, mobile: 2.2 };
 
 type Props = {
   director: Director;
