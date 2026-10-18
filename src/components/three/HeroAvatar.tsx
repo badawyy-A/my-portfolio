@@ -8,6 +8,8 @@ import { X, Y, Z, rig, rotateWorld } from "./avatar/rig";
 import { buildFurniture, type Furniture } from "./avatar/furniture";
 import { crouchIntro, scrollSequence, scrollSequenceMobile, type View } from "./avatar/sequence";
 import { brandShirt } from "./avatar/shirt";
+import { measureMarks, type Marks } from "./avatar/jarvis";
+import Jarvis, { JarvisUI, useLine, type JarvisLink } from "./Jarvis";
 
 const MODEL = "/models/avatar.glb";
 type Mode = "desktop" | "mobile" | null;
@@ -16,7 +18,9 @@ const bodyQuat = new THREE.Quaternion();
 const pitchAxis = new THREE.Vector3();
 
 
-function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onReady: () => void }) {
+type AvatarProps = { reduce: boolean; mode: Mode; visible: boolean; link: JarvisLink; onReady: () => void };
+
+function Avatar({ reduce, mode, visible, link, onReady }: AvatarProps) {
   const { scene } = useLoader(GLTFLoader, MODEL, (loader) => loader.setMeshoptDecoder(MeshoptDecoder));
   const camera = useThree((state) => state.camera);
   const size = useThree((state) => state.size);
@@ -25,6 +29,9 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
     scene.userData.furniture ??= buildFurniture(avatar.current.layout);
     return scene.userData.furniture;
   }, [scene]);
+  // where Jarvis climbs and stands, measured while Badawi still stands in his resting pose
+  const marks = useMemo<Marks | null>(() => (scene.userData.marks ??= measureMarks(scene)), [scene]);
+  const afterFrame = useRef<(() => void) | null>(null);
   const pointer = useRef({ x: 0, y: 0, last: -Infinity });
   const look = useRef({ yaw: 0, pitch: 0 });
   const blink = useRef({ next: 2.5, start: -1 });
@@ -172,12 +179,19 @@ function Avatar({ reduce, mode, onReady }: { reduce: boolean; mode: Mode; onRead
       if (mode === "mobile" && body.current) scrollSequenceMobile(body.current, v);
       onReady();
     }
+
+    afterFrame.current?.();
   });
 
   return (
     <group ref={body}>
       <primitive object={scene} />
       <primitive object={furniture.desk} />
+      {marks && (
+        <Suspense fallback={null}>
+          <Jarvis link={link} marks={marks} look={look} reduce={reduce} mode={mode} visible={visible} onFrame={afterFrame} />
+        </Suspense>
+      )}
     </group>
   );
 }
@@ -202,6 +216,11 @@ export default function HeroAvatar() {
   const [reduce, setReduce] = useState(false);
   const [ready, setReady] = useState(false);
   const [mode, setMode] = useState<Mode>(null);
+  const line = useLine();
+  const bubble = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const greet = useRef<(() => void) | null>(null);
+  const link: JarvisLink = { bubble, button, greet, line };
 
   useEffect(() => {
     setSupported(hasWebGL());
@@ -232,10 +251,11 @@ export default function HeroAvatar() {
         >
           <Lights />
           <Suspense fallback={null}>
-            <Avatar reduce={reduce} mode={mode} onReady={onReady} />
+            <Avatar reduce={reduce} mode={mode} visible={inView} link={link} onReady={onReady} />
           </Suspense>
         </Canvas>
       )}
+      {supported && <JarvisUI link={link} />}
     </div>
   );
 }
