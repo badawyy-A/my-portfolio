@@ -53,6 +53,9 @@ const site = defineCollection({
         }),
       )
       .min(1),
+    stack: z
+      .array(z.object({ name: z.string().min(1), icon: z.string().regex(/^[a-z0-9]+$/).optional(), url: z.url({ protocol: /^https$/ }) }))
+      .min(1),
     contactLine: z.string(),
     location: z.string(),
     links: z.object({

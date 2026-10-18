@@ -57,6 +57,32 @@ experience:
     start: "2021"
     end: "2025"
 
+# Tech stack section (inverted pyramid). icon = Simple Icons slug (simpleicons.org); leave it out to
+# show the tool's initials instead.
+stack:
+  - { name: Python, icon: python, url: "https://www.python.org" }
+  - { name: PyTorch, icon: pytorch, url: "https://pytorch.org" }
+  - { name: ONNX, icon: onnx, url: "https://onnx.ai" }
+  - { name: OpenCV, icon: opencv, url: "https://opencv.org" }
+  - { name: YOLO, icon: yolo, url: "https://docs.ultralytics.com" }
+  - { name: PaddleOCR, icon: paddlepaddle, url: "https://github.com/PaddlePaddle/PaddleOCR" }
+  - { name: MediaPipe, icon: mediapipe, url: "https://ai.google.dev/edge/mediapipe" }
+  - { name: InsightFace, url: "https://insightface.ai" }
+  - { name: scikit-learn, icon: scikitlearn, url: "https://scikit-learn.org" }
+  - { name: Hugging Face, icon: huggingface, url: "https://huggingface.co" }
+  - { name: llama-index, url: "https://www.llamaindex.ai" }
+  - { name: pandas, icon: pandas, url: "https://pandas.pydata.org" }
+  - { name: PySpark, icon: apachespark, url: "https://spark.apache.org/docs/latest/api/python/" }
+  - { name: Airflow, icon: apacheairflow, url: "https://airflow.apache.org" }
+  - { name: FastAPI, icon: fastapi, url: "https://fastapi.tiangolo.com" }
+  - { name: SQLAlchemy, icon: sqlalchemy, url: "https://www.sqlalchemy.org" }
+  - { name: PostgreSQL, icon: postgresql, url: "https://www.postgresql.org" }
+  - { name: MongoDB, icon: mongodb, url: "https://www.mongodb.com" }
+  - { name: React, icon: react, url: "https://react.dev" }
+  - { name: Flutter, icon: flutter, url: "https://flutter.dev" }
+  - { name: Docker, icon: docker, url: "https://www.docker.com" }
+  - { name: GitHub Actions, icon: githubactions, url: "https://github.com/features/actions" }
+
 contactLine: Have a product in mind? Let's build it.
 location: Cairo, Egypt
 

@@ -127,6 +127,14 @@ content:
           - { name: start, label: Start year, type: string, required: true }
           - { name: end, label: End year (or "now"), type: string, required: true }
           - { name: text, label: One line (optional), type: string }
+      - name: stack
+        label: Tech stack (shown as an inverted pyramid, top row first)
+        type: object
+        list: true
+        fields:
+          - { name: name, label: Tool, type: string, required: true }
+          - { name: icon, label: "Logo: Simple Icons slug from simpleicons.org (empty = initials)", type: string }
+          - { name: url, label: Website (https://...), type: string, required: true }
       - name: contactLine
         label: Contact headline
         type: string
